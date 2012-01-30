@@ -14,17 +14,16 @@ class ListItem(QPushButton):
       
       
    def enterEvent(self, event):
-      print "Enter"
       self.mouseOver = True
       
       
    def leaveEvent(self, event):
-      print "Leave"
       if not self.ignoreLeave:
          self.mouseOver = False
       
    def mousePressEvent(self, event):
       if event.button() == Qt.RightButton:
          self.ignoreLeave = True
+      QPushButton.mousePressEvent(self, event)
       
       

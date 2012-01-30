@@ -7,9 +7,13 @@ class MenuReader:
       
       menuPrefix = self.getenv('XDG_MENU_PREFIX')
       if menuPrefix == '':
-         menuPrefix = 'kde-4-' #'kde4-'
+         menuPrefix = 'kde-4-'
+         #menuPrefix = 'kde4-'
       menuPath = os.path.join('menus', menuPrefix + 'applications.menu')
       xdgMenu = self.findFile(menuPath)
+      if xdgMenu == None or not os.path.exists(xdgMenu):
+         print 'Failed to find menu file'
+         return
       self.doc = parse(xdgMenu)
       
       

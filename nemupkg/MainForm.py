@@ -41,7 +41,7 @@ class MainForm(QDialog):
       self.setFocusPolicy(Qt.ClickFocus)
       self.setWindowFlags(Qt.FramelessWindowHint)
       desktop = qApp.desktop()
-      screenSize = desktop.availableGeometry()
+      screenSize = desktop.availableGeometry(QCursor.pos())
       self.move(screenSize.x(), screenSize.y() + screenSize.height() - 400)
       
       self.buttonListLayout = QVBoxLayout(self)
