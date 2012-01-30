@@ -5,7 +5,8 @@ import os
 from MenuReader import *
 from AddForm import *
 from MenuItem import *
-from NemuListWidgetItem import *
+from ListWidget import *
+from ListItem import *
 
 class MainForm(QDialog):
    def __init__(self, parent = None):
@@ -24,6 +25,9 @@ class MainForm(QDialog):
       
       self.setupUI()
       
+      self.setContextMenuPolicy(Qt.ActionsContextMenu)
+      self.createMenu(self)
+      
       self.menuReader = MenuReader()
       
       self.refresh()
@@ -34,30 +38,31 @@ class MainForm(QDialog):
    def setupUI(self):
       self.resize(400, 400)
       self.setFocusPolicy(Qt.ClickFocus)
+      self.setWindowFlags(Qt.FramelessWindowHint)
+      desktop = qApp.desktop()
+      screenSize = desktop.availableGeometry()
+      self.move(screenSize.x(), screenSize.y() + screenSize.height() - 400)
       
       self.listLayout = QHBoxLayout(self)
       self.listLayout.setSpacing(0)
       margin = 0
       self.listLayout.setContentsMargins(margin, margin, margin, margin)
       
-      self.leftList = QListWidget()
-      self.createMenu(self.leftList)
-      self.leftList.setContextMenuPolicy(Qt.ActionsContextMenu)
+      self.leftList = ListWidget()
       self.listLayout.addWidget(self.leftList)
       
-      self.rightList = QListWidget()
-      self.rightList.clicked.connect(self.rightListClicked)
+      self.rightList = ListWidget()
       self.listLayout.addWidget(self.rightList)
       
       
    def createMenu(self, widget):
-      addAction = QAction("Add...", widget)
+      addAction = QAction("Add...", self)
       addAction.triggered.connect(self.addClicked)
       widget.insertAction(None, addAction)
-      editAction = QAction("Edit...", widget)
+      editAction = QAction("Edit...", self)
       editAction.triggered.connect(self.editClicked)
       widget.insertAction(None, editAction)
-      deleteAction = QAction("Delete", widget)
+      deleteAction = QAction("Delete", self)
       deleteAction.triggered.connect(self.deleteClicked)
       widget.insertAction(None, deleteAction)
       
@@ -97,14 +102,14 @@ class MainForm(QDialog):
          for i in self.menuItems:
             if i.parent == currParent:
                newItem = NemuListWidgetItem(i)
-               self.leftList.addItem(newItem)
+               self.leftList.add(newItem)
       
       for i in self.menuItems:
          print i.parent, self.currentItem
          if i.parent == self.currentItem:
             print "Adding", i.name
-            newItem = NemuListWidgetItem(i)
-            self.rightList.addItem(newItem)
+            newItem = ListItem(i)
+            self.rightList.add(newItem)
       
       filename = os.path.join(self.configDir, 'menu')
       with open(filename, 'w') as f:
