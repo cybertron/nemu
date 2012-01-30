@@ -13,6 +13,7 @@ class MainForm(QDialog):
       QDialog.__init__(self, parent)
       self.holdOpen = False
       self.menuItems = []
+      self.allItems = []
       self.currentItem = None
       
       self.configDir = os.path.expanduser('~/.nemu')
@@ -100,30 +101,43 @@ class MainForm(QDialog):
       print "Edit"
       
    def deleteClicked(self):
+      self.menuItems.remove(self.getClicked().item)
+      self.refresh()
       print "Delete"
+      
+      
+   def getClicked(self):
+      for i in self.allItems:
+         if i.mouseOver:
+            return i
       
       
    def refresh(self):
       self.leftList.clear()
       self.rightList.clear()
+      self.allItems = []
       if self.currentItem != None:
          currParent = self.currentItem.parent
          for i in self.menuItems:
             if i.parent == currParent:
-               newItem = ListItem(i)
-               newItem.clicked.connect(self.itemClicked)
+               newItem = self.createItem(i)
                self.leftList.add(newItem)
       
       for i in self.menuItems:
          if i.parent == self.currentItem:
             print "Adding", i.name
-            newItem = ListItem(i)
-            newItem.clicked.connect(self.itemClicked)
+            newItem = self.createItem(i)
             self.rightList.add(newItem)
       
       filename = os.path.join(self.configDir, 'menu')
       with open(filename, 'w') as f:
          pickle.dump(self.menuItems, f)
+         
+   def createItem(self, item):
+      newItem = ListItem(item)
+      newItem.clicked.connect(self.itemClicked)
+      self.allItems.append(newItem)
+      return newItem
             
       
    def itemClicked(self):
