@@ -12,6 +12,9 @@ class AddForm(QDialog):
       self.commandBox = QLineEdit()
       self.addPair('Command', self.commandBox)
       
+      self.folderCheck = QCheckBox('Folder')
+      self.mainLayout.addWidget(self.folderCheck)
+      
       buttonLayout = QHBoxLayout()
       self.okButton = QPushButton('OK')
       self.okButton.clicked.connect(self.okClicked)
@@ -35,5 +38,6 @@ class AddForm(QDialog):
       self.accepted = True
       self.name = str(self.nameBox.text())
       self.command = str(self.commandBox.text())
+      self.folder = self.folderCheck.isChecked()
       self.close()
       

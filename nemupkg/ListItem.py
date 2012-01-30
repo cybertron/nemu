@@ -9,9 +9,4 @@ class ListItem(QPushButton):
       self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
       self.setMaximumHeight(75)
       
-      self.clicked.connect(self.runCommand)
-      
-      
-   def runCommand(self):
-      os.system(self.item.command)
       

@@ -84,6 +84,8 @@ class MainForm(QDialog):
          item = MenuItem()
          item.name = form.name
          item.command = form.command
+         item.parent = self.currentItem
+         item.folder = form.folder
          self.menuItems.append(item)
          self.refresh()
       
@@ -101,14 +103,15 @@ class MainForm(QDialog):
          currParent = self.currentItem.parent
          for i in self.menuItems:
             if i.parent == currParent:
-               newItem = NemuListWidgetItem(i)
+               newItem = ListItem(i)
+               newItem.clicked.connect(self.itemClicked)
                self.leftList.add(newItem)
       
       for i in self.menuItems:
-         print i.parent, self.currentItem
          if i.parent == self.currentItem:
             print "Adding", i.name
             newItem = ListItem(i)
+            newItem.clicked.connect(self.itemClicked)
             self.rightList.add(newItem)
       
       filename = os.path.join(self.configDir, 'menu')
@@ -116,4 +119,12 @@ class MainForm(QDialog):
          pickle.dump(self.menuItems, f)
             
       
+   def itemClicked(self):
+      sender = self.sender()
+      if sender.item.folder:
+         self.currentItem = sender.item
+         self.refresh()
+      else:
+         os.system(sender.item.command + '&')
+         self.close()
       
