@@ -43,7 +43,14 @@ class MainForm(QDialog):
       screenSize = desktop.availableGeometry()
       self.move(screenSize.x(), screenSize.y() + screenSize.height() - 400)
       
-      self.listLayout = QHBoxLayout(self)
+      self.buttonListLayout = QVBoxLayout(self)
+      
+      self.backButton = QPushButton('Back')
+      self.backButton.clicked.connect(self.backClicked)
+      self.buttonListLayout.addWidget(self.backButton)
+      
+      self.listLayout = QHBoxLayout()
+      self.buttonListLayout.addLayout(self.listLayout)
       self.listLayout.setSpacing(0)
       margin = 0
       self.listLayout.setContentsMargins(margin, margin, margin, margin)
@@ -127,4 +134,10 @@ class MainForm(QDialog):
       else:
          os.system(sender.item.command + '&')
          self.close()
+         
+         
+   def backClicked(self):
+      if self.currentItem:
+         self.currentItem = self.currentItem.parent
+         self.refresh()
       
