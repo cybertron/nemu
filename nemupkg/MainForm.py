@@ -55,22 +55,33 @@ class MainForm(QDialog):
       self.move(screenSize.x(), screenSize.y() + screenSize.height() - 400)
       
       self.buttonListLayout = QVBoxLayout(self)
+      self.setMargins(self.buttonListLayout)
       
-      self.backButton = QPushButton('Back')
+      self.buttonLayout = QHBoxLayout(self)
+      self.setMargins(self.buttonLayout)
+      self.buttonListLayout.addLayout(self.buttonLayout, 0)
+      
+      self.backButton = QPushButton('Favorites')
       self.backButton.clicked.connect(self.backClicked)
-      self.buttonListLayout.addWidget(self.backButton)
+      self.buttonLayout.addWidget(self.backButton)
+      
+      self.currentLabel = QLabel()
+      self.currentLabel.setAlignment(Qt.AlignHCenter)
+      self.buttonLayout.addWidget(self.currentLabel)
       
       self.listLayout = QHBoxLayout()
-      self.buttonListLayout.addLayout(self.listLayout)
-      self.listLayout.setSpacing(0)
-      margin = 0
-      self.listLayout.setContentsMargins(margin, margin, margin, margin)
+      self.buttonListLayout.addLayout(self.listLayout, 1)
+      self.setMargins(self.listLayout)
       
       self.leftList = ListWidget()
       self.listLayout.addWidget(self.leftList)
       
       self.rightList = ListWidget()
       self.listLayout.addWidget(self.rightList)
+      
+   def setMargins(self, layout, margin = 0):
+      layout.setSpacing(margin)
+      layout.setContentsMargins(margin, margin, margin, margin)
       
       
    def createMenu(self, widget):
@@ -195,7 +206,7 @@ class MainForm(QDialog):
    def itemClicked(self):
       sender = self.sender()
       if sender.item.folder:
-         self.currentItem = sender.item
+         self.setCurrentItem(sender.item)
          self.refresh()
       else:
          os.system(sender.item.command + '&')
@@ -204,6 +215,19 @@ class MainForm(QDialog):
          
    def backClicked(self):
       if self.currentItem:
-         self.currentItem = self.currentItem.parent
+         self.setCurrentItem(self.currentItem.parent)
          self.refresh()
+         
+         
+   def setCurrentItem(self, item):
+      self.currentItem = item
+      if item != None:
+         self.currentLabel.setText(item.name)
+         if item.parent != None:
+            self.backButton.setText(item.parent.name)
+         else:
+            self.backButton.setText('Favorites')
+      else:
+         self.currentLabel.setText('')
+         self.backButton.setText('Favorites')
       
