@@ -94,16 +94,35 @@ class MainForm(QDialog):
          item.command = form.command
          item.parent = self.currentItem
          item.folder = form.folder
+         item.icon = form.icon
          self.menuItems.append(item)
          self.refresh()
       
    def editClicked(self):
+      form = AddForm()
+      item = self.getClicked().item
+      
+      form.name = item.name
+      form.command = item.command
+      form.folder = item.folder
+      form.icon = item.icon
+      form.populateFields()
+      
+      self.holdOpen = True
+      form.exec_()
+      self.holdOpen = False
+      
+      if form.accepted:
+         item.name = form.name
+         item.command = form.command
+         item.folder = form.folder
+         item.icon = form.icon
+         self.refresh()
       print "Edit"
       
    def deleteClicked(self):
       self.menuItems.remove(self.getClicked().item)
       self.refresh()
-      print "Delete"
       
       
    def getClicked(self):

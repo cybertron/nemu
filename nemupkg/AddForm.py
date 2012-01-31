@@ -6,11 +6,18 @@ class AddForm(QDialog):
       self.accepted = False
       self.mainLayout = QVBoxLayout(self)
       
+      self.iconBox = QLineEdit()
+      iconSelect = QPushButton('Select')
+      iconSelect.clicked.connect(self.iconSelectClicked)
+      self.addTriple('Icon', self.iconBox, iconSelect)
+      
       self.nameBox = QLineEdit()
       self.addPair('Name', self.nameBox)
       
       self.commandBox = QLineEdit()
-      self.addPair('Command', self.commandBox)
+      commandBrowse = QPushButton('Browse')
+      commandBrowse.clicked.connect(self.commandBrowseClicked)
+      self.addTriple('Command', self.commandBox, commandBrowse)
       
       self.folderCheck = QCheckBox('Folder')
       self.mainLayout.addWidget(self.folderCheck)
@@ -26,6 +33,8 @@ class AddForm(QDialog):
       
       self.mainLayout.addLayout(buttonLayout)
       
+      self.resize(400, 100)
+      
       
    def addPair(self, name, widget):
       tempLayout = QHBoxLayout()
@@ -34,10 +43,36 @@ class AddForm(QDialog):
       self.mainLayout.addLayout(tempLayout)
       
       
+   def addTriple(self, name, first, second):
+      tempLayout = QHBoxLayout()
+      tempLayout.addWidget(QLabel(name))
+      tempLayout.addWidget(first)
+      tempLayout.addWidget(second)
+      self.mainLayout.addLayout(tempLayout)
+      
+      
    def okClicked(self):
       self.accepted = True
       self.name = str(self.nameBox.text())
       self.command = str(self.commandBox.text())
       self.folder = self.folderCheck.isChecked()
+      self.icon = str(self.iconBox.text())
       self.close()
+      
+      
+   def commandBrowseClicked(self):
+      filename = QFileDialog.getOpenFileName()
+      self.commandBox.setText(filename)
+      
+      
+   def iconSelectClicked(self):
+      filename = QFileDialog.getOpenFileName(directory = '/usr/share/icons')
+      self.iconBox.setText(filename)
+
+      
+   def populateFields(self):
+      self.nameBox.setText(self.name)
+      self.commandBox.setText(self.command)
+      self.folderCheck.setChecked(self.folder)
+      self.iconBox.setText(self.icon)
       

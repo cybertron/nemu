@@ -9,8 +9,11 @@ class ListItem(QPushButton):
       self.mouseOver = False
       self.ignoreLeave = False
       self.setText(item.name)
+      self.setIcon(QIcon(item.icon))
+      self.setIconSize(QSize(32, 32))
       self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
       self.setMaximumHeight(75)
+      self.setFont(QFont(self.font().family(), 12))
       
       
    def enterEvent(self, event):
