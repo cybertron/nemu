@@ -10,9 +10,10 @@ class ListItem(QPushButton):
       self.ignoreLeave = False
       self.setText(item.name)
       self.setIcon(QIcon(item.icon))
-      self.setIconSize(QSize(32, 32))
+      self.setIconSize(QSize(24, 24))
       self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
       self.setMaximumHeight(75)
+      self.setMinimumHeight(35)
       self.setFont(QFont(self.font().family(), 12))
       
       

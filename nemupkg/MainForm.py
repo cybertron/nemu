@@ -17,6 +17,7 @@ class MainForm(QDialog):
       self.allItems = []
       self.favorites = []
       self.currentItem = None
+      self.initSettings()
       
       self.configDir = os.path.expanduser('~/.nemu')
       if not os.path.isdir(self.configDir):
@@ -25,6 +26,8 @@ class MainForm(QDialog):
       self.menuItems = self.loadConfig(self.menuFile, self.menuItems)
       self.favoritesFile = os.path.expanduser('~/.nemu/favorites')
       self.favorites = self.loadConfig(self.favoritesFile, self.favorites)
+      self.settingsFile = os.path.expanduser('~/.nemu/settings')
+      self.settings = self.loadConfig(self.settingsFile, self.settings)
       
       self.setupUI()
       
@@ -38,6 +41,12 @@ class MainForm(QDialog):
       self.show()
       
       
+   def initSettings(self):
+      self.settings = dict()
+      self.settings['width'] = 400
+      self.settings['height'] = 400
+      
+      
    def loadConfig(self, filename, default):
       if os.path.exists(filename):
          with open(filename) as f:
@@ -47,16 +56,16 @@ class MainForm(QDialog):
       
       
    def setupUI(self):
-      self.resize(400, 400)
+      self.resize(self.settings['width'], self.settings['height'])
       self.setWindowFlags(Qt.FramelessWindowHint)
       desktop = qApp.desktop()
       screenSize = desktop.availableGeometry(QCursor.pos())
-      self.move(screenSize.x(), screenSize.y() + screenSize.height() - 400)
+      self.move(screenSize.x(), screenSize.y() + screenSize.height() - self.height())
       
       self.buttonListLayout = QVBoxLayout(self)
       self.setMargins(self.buttonListLayout)
       
-      self.buttonLayout = QHBoxLayout(self)
+      self.buttonLayout = QHBoxLayout()
       self.setMargins(self.buttonLayout)
       self.buttonListLayout.addLayout(self.buttonLayout, 0)
       
@@ -68,15 +77,19 @@ class MainForm(QDialog):
       self.currentLabel.setAlignment(Qt.AlignHCenter)
       self.buttonLayout.addWidget(self.currentLabel)
       
-      self.listLayout = QHBoxLayout()
-      self.buttonListLayout.addLayout(self.listLayout, 1)
-      self.setMargins(self.listLayout)
+      self.listSplitter = QSplitter()
+      self.buttonListLayout.addWidget(self.listSplitter, 1)
+      #self.setMargins(self.listLayout)
       
       self.leftList = ListWidget()
-      self.listLayout.addWidget(self.leftList)
+      self.listSplitter.addWidget(self.leftList)
       
       self.rightList = ListWidget()
-      self.listLayout.addWidget(self.rightList)
+      self.listSplitter.addWidget(self.rightList)
+      
+      # Has to be done after adding widgets to the splitter or the size will get reset again
+      if 'splitterState' in self.settings:
+         self.listSplitter.restoreState(self.settings['splitterState'])
       
    def setMargins(self, layout, margin = 0):
       layout.setSpacing(margin)
@@ -102,6 +115,13 @@ class MainForm(QDialog):
       if event.type() == QEvent.ActivationChange and not self.isActiveWindow() and not self.holdOpen:
          print "Lost focus"
          self.close()
+         
+   def closeEvent(self, event):
+      self.settings['splitterState'] = self.listSplitter.saveState()
+      self.settings['width'] = self.width()
+      self.settings['height'] = self.height()
+      with open(self.settingsFile, 'w') as f:
+         pickle.dump(self.settings, f)
          
          
    def newClicked(self):
