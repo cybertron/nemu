@@ -48,7 +48,6 @@ class MainForm(QDialog):
       
    def setupUI(self):
       self.resize(400, 400)
-      self.setFocusPolicy(Qt.ClickFocus)
       self.setWindowFlags(Qt.FramelessWindowHint)
       desktop = qApp.desktop()
       screenSize = desktop.availableGeometry(QCursor.pos())
