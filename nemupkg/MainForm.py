@@ -69,16 +69,25 @@ class MainForm(QDialog):
       self.setMargins(self.buttonLayout)
       self.buttonListLayout.addLayout(self.buttonLayout, 0)
       
+      path = os.path.join(os.path.dirname(__file__), 'images')
+      path = os.path.join(path, 'nemu.png')
+      self.settingsButton = QPushButton()
+      self.settingsButton.setIcon(QIcon(path))
+      self.settingsButton.setMinimumHeight(35)
+      self.buttonLayout.addWidget(self.settingsButton, 0)
+      
       self.backButton = QPushButton('Favorites')
+      self.backButton.setMinimumHeight(35)
       self.backButton.clicked.connect(self.backClicked)
       self.buttonLayout.addWidget(self.backButton, 1)
       
       self.currentLabel = QLabel()
-      self.currentLabel.setAlignment(Qt.AlignHCenter)
+      self.currentLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
       self.buttonLayout.addWidget(self.currentLabel, 1)
       
       self.sizeGrip = QSizeGrip(self)
-      self.buttonLayout.addWidget(self.sizeGrip, 0)
+      self.sizeGrip.setMinimumSize(QSize(25, 25))
+      self.buttonLayout.addWidget(self.sizeGrip, 0, Qt.AlignRight | Qt.AlignTop)
       
       self.listSplitter = QSplitter()
       self.buttonListLayout.addWidget(self.listSplitter, 1)
