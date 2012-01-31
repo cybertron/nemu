@@ -6,11 +6,6 @@ class AddForm(QDialog):
       self.accepted = False
       self.mainLayout = QVBoxLayout(self)
       
-      self.iconBox = QLineEdit()
-      iconSelect = QPushButton('Select')
-      iconSelect.clicked.connect(self.iconSelectClicked)
-      self.addTriple('Icon', self.iconBox, iconSelect)
-      
       self.nameBox = QLineEdit()
       self.addPair('Name', self.nameBox)
       
@@ -18,6 +13,11 @@ class AddForm(QDialog):
       commandBrowse = QPushButton('Browse')
       commandBrowse.clicked.connect(self.commandBrowseClicked)
       self.addTriple('Command', self.commandBox, commandBrowse)
+      
+      self.iconBox = QLineEdit()
+      iconSelect = QPushButton('Select')
+      iconSelect.clicked.connect(self.iconSelectClicked)
+      self.addTriple('Icon', self.iconBox, iconSelect)
       
       self.folderCheck = QCheckBox('Folder')
       self.mainLayout.addWidget(self.folderCheck)

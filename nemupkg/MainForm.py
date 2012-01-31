@@ -2,6 +2,7 @@ from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 import pickle
 import os
+import copy
 from MenuReader import *
 from AddForm import *
 from MenuItem import *
@@ -14,15 +15,16 @@ class MainForm(QDialog):
       self.holdOpen = False
       self.menuItems = []
       self.allItems = []
+      self.favorites = []
       self.currentItem = None
       
       self.configDir = os.path.expanduser('~/.nemu')
       if not os.path.isdir(self.configDir):
          os.mkdir(self.configDir)
       self.menuFile = os.path.expanduser('~/.nemu/menu')
-      if os.path.exists(self.menuFile):
-         with open(self.menuFile) as f:
-            self.menuItems = pickle.load(f)
+      self.menuItems = self.loadConfig(self.menuFile, self.menuItems)
+      self.favoritesFile = os.path.expanduser('~/.nemu/favorites')
+      self.favorites = self.loadConfig(self.favoritesFile, self.favorites)
       
       self.setupUI()
       
@@ -34,6 +36,14 @@ class MainForm(QDialog):
       self.refresh()
       
       self.show()
+      
+      
+   def loadConfig(self, filename, default):
+      if os.path.exists(filename):
+         with open(filename) as f:
+            return pickle.load(f)
+      else:
+         return default
       
       
    def setupUI(self):
@@ -64,8 +74,11 @@ class MainForm(QDialog):
       
       
    def createMenu(self, widget):
-      addAction = QAction("Add...", self)
-      addAction.triggered.connect(self.addClicked)
+      addFavoriteAction = QAction('Add to Favorites', self)
+      addFavoriteAction.triggered.connect(self.addFavoriteClicked)
+      widget.insertAction(None, addFavoriteAction)
+      addAction = QAction("New...", self)
+      addAction.triggered.connect(self.newClicked)
       widget.insertAction(None, addAction)
       editAction = QAction("Edit...", self)
       editAction.triggered.connect(self.editClicked)
@@ -81,7 +94,7 @@ class MainForm(QDialog):
          self.close()
          
          
-   def addClicked(self):
+   def newClicked(self):
       form = AddForm()
       
       self.holdOpen = True
@@ -118,10 +131,25 @@ class MainForm(QDialog):
          item.folder = form.folder
          item.icon = form.icon
          self.refresh()
-      print "Edit"
+      
       
    def deleteClicked(self):
-      self.menuItems.remove(self.getClicked().item)
+      self.delete(self.getClicked().item)
+      self.refresh()
+      
+   # Delete item and all of its children so we don't leave around orphaned items
+   def delete(self, item):
+      for i in self.menuItems:
+         if i.parent == item:
+            self.delete(i)
+      if item in self.menuItems:
+         self.menuItems.remove(item)
+      if item in self.favorites:
+         self.favorites.remove(item)
+      
+      
+   def addFavoriteClicked(self):
+      self.favorites.append(copy.copy(self.getClicked().item))
       self.refresh()
       
       
@@ -141,16 +169,21 @@ class MainForm(QDialog):
             if i.parent == currParent:
                newItem = self.createItem(i)
                self.leftList.add(newItem)
+      else:
+         for i in self.favorites:
+            newItem = self.createItem(i)
+            self.leftList.add(newItem)
       
       for i in self.menuItems:
          if i.parent == self.currentItem:
-            print "Adding", i.name
             newItem = self.createItem(i)
             self.rightList.add(newItem)
       
-      filename = os.path.join(self.configDir, 'menu')
-      with open(filename, 'w') as f:
+      # Save the current menu status
+      with open(self.menuFile, 'w') as f:
          pickle.dump(self.menuItems, f)
+      with open(self.favoritesFile, 'w') as f:
+         pickle.dump(self.favorites, f)
          
    def createItem(self, item):
       newItem = ListItem(item)
