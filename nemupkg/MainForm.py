@@ -71,15 +71,17 @@ class MainForm(QDialog):
       
       self.backButton = QPushButton('Favorites')
       self.backButton.clicked.connect(self.backClicked)
-      self.buttonLayout.addWidget(self.backButton)
+      self.buttonLayout.addWidget(self.backButton, 1)
       
       self.currentLabel = QLabel()
       self.currentLabel.setAlignment(Qt.AlignHCenter)
-      self.buttonLayout.addWidget(self.currentLabel)
+      self.buttonLayout.addWidget(self.currentLabel, 1)
+      
+      self.sizeGrip = QSizeGrip(self)
+      self.buttonLayout.addWidget(self.sizeGrip, 0)
       
       self.listSplitter = QSplitter()
       self.buttonListLayout.addWidget(self.listSplitter, 1)
-      #self.setMargins(self.listLayout)
       
       self.leftList = ListWidget()
       self.listSplitter.addWidget(self.leftList)
@@ -249,4 +251,5 @@ class MainForm(QDialog):
       else:
          self.currentLabel.setText('')
          self.backButton.setText('Favorites')
+         
       
