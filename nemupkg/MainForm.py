@@ -35,6 +35,7 @@ class MainForm(QDialog):
       self.createMenu(self)
       
       self.menuReader = MenuReader()
+      self.menuItems = self.menuReader.menuItems
       
       self.refresh()
       

@@ -1,20 +1,32 @@
 import os
 from xml.dom.minidom import parse
+from MenuItem import *
 
 class MenuReader:
    def __init__(self):
       self.xdgConfigDirs = self.getenv('XDG_CONFIG_DIRS')
+      self.xdgDataDirs = self.getenv('XDG_DATA_DIRS')
+      self.desktopEntries = dict()
+      self.menus = []
+      self.menuItems = []
+      
+      self.loadDesktopEntries()
       
       menuPrefix = self.getenv('XDG_MENU_PREFIX')
       if menuPrefix == '':
          menuPrefix = 'kde-4-'
          #menuPrefix = 'kde4-'
       menuPath = os.path.join('menus', menuPrefix + 'applications.menu')
-      xdgMenu = self.findFile(menuPath)
+      xdgMenu = self.findFile(self.xdgConfigDirs, menuPath)
       if xdgMenu == None or not os.path.exists(xdgMenu):
          print 'Failed to find menu file'
          return
+      #xdgMenu = '/home/cybertron/source/nemu/test.menu'
       self.doc = parse(xdgMenu)
+      
+      self.loadMenu(self.doc.documentElement)
+      
+      self.buildMenu()
       
       
    def getenv(self, key):
@@ -22,15 +34,162 @@ class MenuReader:
          return os.environ[key]
       else:
          return ''
-      
-      
-   def findFile(self, path):
-      if ':' in self.xdgConfigDirs:
-         dirs = self.xdgConfigDirs.split(':')
-      else:
-         dirs = [self.xdgConfigDirs]
          
-      for base in dirs:
+         
+   def splitDirs(self, dirs):
+      if ':' in dirs:
+         return dirs.split(':')
+      else:
+         return [dirs]
+      
+      
+   def findFile(self, baseDirs, path):
+      for base in self.splitDirs(baseDirs):
          current = os.path.join(base, path)
          if os.path.exists(current):
             return current
+            
+            
+   def loadDesktopEntries(self):
+      for base in self.splitDirs(self.xdgDataDirs):
+         currPath = os.path.join(base, 'applications')
+         if os.path.isdir(currPath):
+            self.loadEntryDirectory(currPath)
+            
+            
+   def loadEntryDirectory(self, path, prefix = ''):
+      for i in os.listdir(path):
+         currPath = os.path.join(path, i)
+         if os.path.isdir(currPath):
+            self.loadEntryDirectory(currPath, prefix + i + '-')
+         else:
+            self.desktopEntries[prefix + i] = DesktopEntry(currPath)
+            
+            
+   def loadMenu(self, element, parent = None):
+      current = Menu()
+      current.parent = parent
+      self.menus.append(current)
+      for i in element.childNodes:
+         if i.nodeName == 'Name':
+            current.name = i.firstChild.nodeValue
+         elif i.nodeName == 'Menu':
+            self.loadMenu(i, current)
+         elif i.nodeName == 'OnlyUnallocated':
+            del self.menus[-1]
+            return
+         elif i.nodeName == 'Include':
+            self.readLogic(i, current.logic['Or'])
+                  
+                  
+   def readLogic(self, element, logic):
+      for i in element.childNodes:
+         if i.nodeName == 'And' or i.nodeName == 'Or' or i.nodeName == 'Not':
+            logic[i.nodeName] = dict()
+            self.readLogic(i, logic[i.nodeName])
+         elif i.nodeName == 'Category' or i.nodeName == 'Filename':
+            name = i.firstChild.nodeValue
+            logic[name] = i.nodeName
+            
+            
+   def buildMenu(self):
+      for i in self.menus:
+         currMenu = MenuItem()
+         currMenu.name = i.name
+         currMenu.folder = True
+         if i.parent != None:
+            currMenu.parent = i.parent.menuItem
+         i.menuItem = currMenu
+         self.menuItems.append(currMenu)
+         for key, value in self.desktopEntries.items():
+            if i.include(key, value.categories) and not value.noDisplay:
+               print 'Adding', value.name, value.categories, 'to', i.name
+               newItem = MenuItem()
+               newItem.parent = currMenu
+               newItem.name = value.name
+               newItem.command = value.command
+               newItem.icon = value.icon
+               self.menuItems.append(newItem)
+         
+            
+class DesktopEntry():
+   def __init__(self, path):
+      self.path = path
+      self.categories = ''
+      self.name = ''
+      self.command = ''
+      self.icon = ''
+      self.noDisplay = False
+      with open(path) as f:
+         for line in f:
+            if line[:10] == 'Categories':
+               self.categories = self.getValue(line)
+            if line[:5] == 'Name=':
+               self.name = self.getValue(line)
+            if line[:4] == 'Exec':
+               self.command = self.getValue(line)
+            if line[:4] == 'Icon':
+               self.icon = self.getValue(line)
+            if line[:9] == 'NoDisplay':
+               if self.getValue(line).lower() == 'true':
+                  self.noDisplay = True
+               
+   def getValue(self, line):
+      s = line[:-1] # Remove \n
+      s = s.split('=')
+      return s[1]
+               
+               
+class Menu():
+   def __init__(self):
+      self.logic = dict()
+      self.logic['Or'] = dict()
+      self.parent = None
+      self.name = 'The unnamed menu'
+      self.menuItem = None
+      
+   def include(self, filename, categories):
+      if ';' in categories:
+         cats = categories.split(';')
+      else:
+         cats = [categories]
+         
+      return self.includeLogic(filename, cats, self.logic)
+      
+      
+   def includeLogic(self, filename, categories, logic):
+      for key, value in logic.items():
+         if key == 'And':
+            retval = True
+            for k, v in value.items():
+               if v == 'Category' or v == 'Filename':
+                  retval &= self.checkFile(k, filename, categories)
+               else:
+                  retval &= self.includeLogic(filename, categories, {k:v})
+            return retval
+         if key == 'Or':
+            retval = False
+            for k, v in value.items():
+               if v == 'Category' or v == 'Filename':
+                  retval |= self.checkFile(k, filename, categories)
+               else:
+                  retval |= self.includeLogic(filename, categories, {k:v})
+            return retval
+         if key == 'Not':
+            for k, v in value.items():
+               retval = False
+               if v == 'Category' or v == 'Filename':
+                  retval = self.checkFile(k, filename, categories)
+               else:
+                  retval = self.includeLogic(filename, categories, {k:v})
+               if retval:
+                  return False
+            return True
+         else:
+            print 'Got unrecognized logic type', key
+            return False
+      
+   def checkFile(self, name, filename, categories):
+      return name in categories or name == filename
+         
+      
