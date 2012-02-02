@@ -25,18 +25,19 @@ class MenuItem:
       self.icon = iconPath
             
    def lookForIcon(self, icon, path, recurse = False):
-      for i in os.listdir(path):
-         currPath = os.path.join(path, i)
-         if i.startswith(icon + '.') or i == icon:
-            return currPath
-         if i == self.iconTheme:
-            retval = self.lookForIcon(icon, currPath, True)
-            if retval != '':
-               return retval
-         if os.path.isdir(currPath) and recurse:
-            retval = self.lookForIcon(icon, currPath, recurse)
-            if retval != '':
-               return retval
-      if not recurse:
-         return self.lookForIcon(icon, path, True)
+      if os.path.isdir(path):
+         for i in os.listdir(path):
+            currPath = os.path.join(path, i)
+            if i.startswith(icon + '.') or i == icon:
+               return currPath
+            if i == self.iconTheme:
+               retval = self.lookForIcon(icon, currPath, True)
+               if retval != '':
+                  return retval
+            if os.path.isdir(currPath) and recurse:
+               retval = self.lookForIcon(icon, currPath, recurse)
+               if retval != '':
+                  return retval
+         if not recurse:
+            return self.lookForIcon(icon, path, True)
       return ''
