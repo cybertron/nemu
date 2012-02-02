@@ -30,6 +30,11 @@ class MainForm(QDialog):
       self.settingsFile = os.path.expanduser('~/.nemu/settings')
       self.settings = self.loadConfig(self.settingsFile, self.settings)
       
+      # This should never happen, but unfortunately bugs do, so clean up orphaned items.
+      # We need to do this because these items won't show up in the UI, but may interfere with
+      # merges if they duplicate something that is being merged in.
+      self.menuItems[:] = [i for i in self.menuItems if i.parent == None or i.parent in self.menuItems]
+      
       self.setupUI()
       
       self.setContextMenuPolicy(Qt.ActionsContextMenu)
@@ -216,7 +221,9 @@ class MainForm(QDialog):
       
       
    def addFavoriteClicked(self):
-      self.favorites.append(copy.copy(self.getClicked().item))
+      newFavorite = copy.copy(self.getClicked().item)
+      newFavorite.parent = None
+      self.favorites.append(newFavorite)
       self.refresh()
       
       
