@@ -8,6 +8,7 @@ class MenuReader:
       if self.xdgConfigDirs == '':
          self.xdgConfigDirs = '/etc/xdg'
       self.xdgDataDirs = self.getenv('XDG_DATA_DIRS')
+      self.xdgDataDirs += ':' + os.path.expanduser('~/.local/share')
       self.desktopEntries = dict()
       self.menus = []
       self.menuItems = []
