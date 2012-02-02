@@ -23,9 +23,11 @@ class SettingsForm(QDialog):
       importPage = QWidget()
       importPageLayout = QVBoxLayout(importPage)
       self.importFileText = QLineEdit()
-      self.importFileSelect = QPushButton('Select')
+      self.importFileSelect = QPushButton('System')
       self.importFileSelect.clicked.connect(self.importSelectClicked)
-      self.addWidgets(importPageLayout, 'Menu File', [self.importFileText, self.importFileSelect])
+      self.importFileUser = QPushButton('User')
+      self.importFileUser.clicked.connect(self.importUserClicked)
+      self.addWidgets(importPageLayout, 'Menu File', [self.importFileText, self.importFileSelect, self.importFileUser])
       
       themes = self.getIconThemes()
       self.themeCombo = QComboBox()
@@ -88,6 +90,11 @@ class SettingsForm(QDialog):
       
    def importSelectClicked(self):
       filename = QFileDialog.getOpenFileName(directory = '/etc/xdg/menus')
+      if filename != '':
+         self.importFileText.setText(filename)
+         
+   def importUserClicked(self):
+      filename = QFileDialog.getOpenFileName(directory = os.path.expanduser('~/.config/menus'))
       if filename != '':
          self.importFileText.setText(filename)
          

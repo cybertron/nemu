@@ -203,9 +203,8 @@ class MainForm(QDialog):
       
    # Delete item and all of its children so we don't leave around orphaned items
    def delete(self, item):
-      for i in self.menuItems:
-         if i.parent == item:
-            self.delete(i)
+      self.menuItems[:] = [i for i in self.menuItems if i.parent != item]
+      
       if item in self.menuItems:
          self.menuItems.remove(item)
       if item in self.favorites:

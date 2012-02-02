@@ -17,9 +17,6 @@ class MenuReader:
       
       if xdgMenu == None:
          menuPrefix = self.getenv('XDG_MENU_PREFIX')
-         if menuPrefix == '':
-            menuPrefix = 'kde-4-'
-            menuPrefix = 'kde4-'
          menuPath = os.path.join('menus', menuPrefix + 'applications.menu')
          xdgMenu = self.findFile(self.xdgConfigDirs, menuPath)
          
@@ -159,7 +156,7 @@ class DesktopEntry():
    def getValue(self, line):
       s = line[:-1] # Remove \n
       s = s.split('=')
-      return s[1]
+      return '='.join(s[1:])
                
                
 class Menu():
