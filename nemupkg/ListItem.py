@@ -11,7 +11,7 @@ class ListItem(QPushButton):
       self.setText(item.name)
       self.setIcon(QIcon(item.icon))
       self.setIconSize(QSize(24, 24))
-      self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+      self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
       self.setMaximumHeight(75)
       self.setMinimumHeight(35)
       self.setFont(QFont(self.font().family(), 12))

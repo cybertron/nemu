@@ -60,6 +60,12 @@ class MainForm(QDialog):
    def setupUI(self):
       self.resize(self.settings['width'], self.settings['height'])
       self.setWindowFlags(Qt.FramelessWindowHint)
+      self.setWindowTitle('Nemu')
+      
+      iconPath = os.path.join(os.path.dirname(__file__), 'images')
+      iconPath = os.path.join(iconPath, 'nemu.png')
+      self.setWindowIcon(QIcon(iconPath))
+      
       desktop = qApp.desktop()
       screenSize = desktop.availableGeometry(QCursor.pos())
       self.move(screenSize.x(), screenSize.y() + screenSize.height() - self.height())
@@ -71,10 +77,8 @@ class MainForm(QDialog):
       self.setMargins(self.buttonLayout)
       self.buttonListLayout.addLayout(self.buttonLayout, 0)
       
-      path = os.path.join(os.path.dirname(__file__), 'images')
-      path = os.path.join(path, 'nemu.png')
       self.settingsButton = QPushButton()
-      self.settingsButton.setIcon(QIcon(path))
+      self.settingsButton.setIcon(QIcon(iconPath))
       self.settingsButton.setMinimumHeight(35)
       self.settingsButton.clicked.connect(self.settingsClicked)
       self.buttonLayout.addWidget(self.settingsButton, 0)
