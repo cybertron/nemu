@@ -3,7 +3,6 @@ from PyQt4.QtCore import *
 import pickle
 import os
 import copy
-import time
 from MenuReader import *
 from AddForm import *
 from MenuItem import *
@@ -14,7 +13,6 @@ from SettingsForm import *
 class MainForm(QDialog):
    def __init__(self, parent = None):
       QDialog.__init__(self, parent)
-      t = time.clock()
       self.holdOpen = False
       self.menuItems = []
       self.allItems = []
@@ -33,8 +31,6 @@ class MainForm(QDialog):
       self.settings = self.loadConfig(self.settingsFile, self.settings)
       
       self.setupUI()
-      
-      print 'setupUI', time.clock() - t
       
       self.setContextMenuPolicy(Qt.ActionsContextMenu)
       self.createMenu(self)
@@ -99,10 +95,10 @@ class MainForm(QDialog):
       self.listSplitter = QSplitter()
       self.buttonListLayout.addWidget(self.listSplitter, 1)
       
-      self.leftList = ListWidget()
+      self.leftList = ListWidget(self.clearListMouseOver)
       self.listSplitter.addWidget(self.leftList)
       
-      self.rightList = ListWidget()
+      self.rightList = ListWidget(self.clearListMouseOver)
       self.listSplitter.addWidget(self.rightList)
       
       # Has to be done after adding widgets to the splitter or the size will get reset again
@@ -153,17 +149,31 @@ class MainForm(QDialog):
          item = MenuItem()
          item.name = form.name
          item.command = form.command
-         clicked = self.getClicked()
-         item.parent = clicked.item.parent
          item.folder = form.folder
          item.icon = form.icon
          item.findIcon()
+         
+         clicked = self.getClicked()
+         if clicked:
+            parent = clicked.item.parent
+         elif self.leftList.mouseOver:
+            if self.currentItem != None:
+               parent = self.currentItem.parent
+            else:
+               parent = None
+         else:
+            parent = self.currentItem
+         item.parent = parent
+         
          self.menuItems.append(item)
          self.refresh()
       
    def editClicked(self):
       form = AddForm()
-      item = self.getClicked().item
+      clicked = self.getClicked()
+      if clicked == None:
+         return
+      item = clicked.item
       
       form.name = item.name
       form.command = item.command
@@ -185,7 +195,10 @@ class MainForm(QDialog):
       
       
    def deleteClicked(self):
-      self.delete(self.getClicked().item)
+      clicked = self.getClicked()
+      if clicked == None:
+         return
+      self.delete(clicked.item)
       self.refresh()
       
    # Delete item and all of its children so we don't leave around orphaned items
@@ -207,12 +220,15 @@ class MainForm(QDialog):
    def getClicked(self):
       for i in self.allItems:
          if i.mouseOver:
-            i.mouseOver = False
             return i
             
    def clearMouseOver(self):
       for i in self.allItems:
          i.mouseOver = False
+         
+   def clearListMouseOver(self):
+      self.leftList.mouseOver = False
+      self.rightList.mouseOver = False
       
       
    def refresh(self):

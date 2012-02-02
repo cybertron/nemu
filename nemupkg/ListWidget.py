@@ -2,8 +2,9 @@ from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 
 class ListWidget(QScrollArea):
-   def __init__(self, parent = None):
+   def __init__(self, clearMouseOver, parent = None):
       QScrollArea.__init__(self, parent)
+      self.clearMouseOver = clearMouseOver
       self.mouseOver = False
       
       self.widget = QWidget() # Just adding the layout directly doesn't work right, so wrap it in a QWidget
@@ -30,6 +31,7 @@ class ListWidget(QScrollArea):
    
    def mousePressEvent(self, event):
       if event.button() == Qt.RightButton:
+         self.clearMouseOver()
          self.mouseOver = True
       QScrollArea.mousePressEvent(self, event)
       
