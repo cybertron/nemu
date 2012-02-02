@@ -9,6 +9,7 @@ from AddForm import *
 from MenuItem import *
 from ListWidget import *
 from ListItem import *
+from SettingsForm import *
 
 class MainForm(QDialog):
    def __init__(self, parent = None):
@@ -38,20 +39,10 @@ class MainForm(QDialog):
       self.setContextMenuPolicy(Qt.ActionsContextMenu)
       self.createMenu(self)
       
-      self.menuReader = MenuReader()
-      print 'menuReader', time.clock() - t
-      self.mergeMenu(self.menuReader.menuItems)
-      print 'merge', time.clock() - t
-      self.removeEmptyFolders()
-      print 'removeEmpty', time.clock() - t
-      
-      # Looking for icons is slow - just do it once
-      for i in self.menuItems:
-         i.findIcon()
-         
-      print 'findIcons', time.clock() - t
-      
       self.refresh()
+      
+      if len(self.menuItems) == 0:
+         self.firstRun()
       
       self.show()
       
@@ -89,6 +80,7 @@ class MainForm(QDialog):
       self.settingsButton = QPushButton()
       self.settingsButton.setIcon(QIcon(path))
       self.settingsButton.setMinimumHeight(35)
+      self.settingsButton.clicked.connect(self.settingsClicked)
       self.buttonLayout.addWidget(self.settingsButton, 0)
       
       self.backButton = QPushButton('Favorites')
@@ -292,46 +284,16 @@ class MainForm(QDialog):
          self.backButton.setText('Favorites')
          
          
-   def mergeMenu(self, mergeItems):
-      parentMap = dict()
-      for i in mergeItems:
-         if i.parent in parentMap:
-            i.parent = parentMap[i.parent]
-         dup = None
-         for j in self.menuItems:
-            if self.checkDup(i, j):
-               dup = j
-               break
-         if dup == None:
-            self.menuItems.append(i)
-         else:
-            parentMap[i] = dup
-            
-                  
-   def checkDup(self, i, j):
-      if i.name == j.name:
-         iParent = i.parent
-         jParent = j.parent
-         while iParent != None and jParent != None and iParent.name == jParent.name:
-            iParent = iParent.parent
-            jParent = jParent.parent
-         if iParent == None and jParent == None:
-            return True
-      return False
+   def settingsClicked(self):
+      form = SettingsForm(self)
+      
+      self.holdOpen = True
+      form.exec_()
+      self.holdOpen = False
       
       
-   def removeEmptyFolders(self):
-      removed = True
-      while removed:
-         removed = False
-         for i in self.menuItems:
-            if i.folder:
-               empty = True
-               for j in self.menuItems:
-                  if j.parent == i:
-                     empty = False
-                     break
-               if empty:
-                  self.menuItems.remove(i)
-                  removed = True
+   def firstRun(self):
+      QMessageBox.information(self, 'First Time?', 'Your menu is currently empty.  It is recommended that you import an existing menu file.')
+      self.settingsClicked()
+      
       

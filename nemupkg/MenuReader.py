@@ -3,7 +3,7 @@ from xml.dom.minidom import parse
 from MenuItem import *
 
 class MenuReader:
-   def __init__(self):
+   def __init__(self, xdgMenu = None):
       self.xdgConfigDirs = self.getenv('XDG_CONFIG_DIRS')
       if self.xdgConfigDirs == '':
          self.xdgConfigDirs = '/etc/xdg'
@@ -14,16 +14,18 @@ class MenuReader:
       
       self.loadDesktopEntries()
       
-      menuPrefix = self.getenv('XDG_MENU_PREFIX')
-      if menuPrefix == '':
-         menuPrefix = 'kde-4-'
-         menuPrefix = 'kde4-'
-      menuPath = os.path.join('menus', menuPrefix + 'applications.menu')
-      xdgMenu = self.findFile(self.xdgConfigDirs, menuPath)
+      if xdgMenu == None:
+         menuPrefix = self.getenv('XDG_MENU_PREFIX')
+         if menuPrefix == '':
+            menuPrefix = 'kde-4-'
+            menuPrefix = 'kde4-'
+         menuPath = os.path.join('menus', menuPrefix + 'applications.menu')
+         xdgMenu = self.findFile(self.xdgConfigDirs, menuPath)
+         
       if xdgMenu == None or not os.path.exists(xdgMenu):
          print 'Failed to find menu file'
          return
-      #xdgMenu = '/home/cybertron/source/nemu/test.menu'
+
       self.doc = parse(xdgMenu)
       
       self.loadMenu(self.doc.documentElement)

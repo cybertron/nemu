@@ -67,7 +67,8 @@ class AddForm(QDialog):
       
    def iconSelectClicked(self):
       filename = QFileDialog.getOpenFileName(directory = '/usr/share/icons')
-      self.iconBox.setText(filename)
+      if filename != '':
+         self.iconBox.setText(filename)
 
       
    def populateFields(self):
