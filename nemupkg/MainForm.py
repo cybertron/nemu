@@ -153,7 +153,8 @@ class MainForm(QDialog):
          item = MenuItem()
          item.name = form.name
          item.command = form.command
-         item.parent = self.currentItem
+         clicked = self.getClicked()
+         item.parent = clicked.item.parent
          item.folder = form.folder
          item.icon = form.icon
          item.findIcon()
@@ -208,6 +209,10 @@ class MainForm(QDialog):
          if i.mouseOver:
             i.mouseOver = False
             return i
+            
+   def clearMouseOver(self):
+      for i in self.allItems:
+         i.mouseOver = False
       
       
    def refresh(self):
@@ -245,7 +250,7 @@ class MainForm(QDialog):
          pickle.dump(self.favorites, f)
          
    def createItem(self, item):
-      newItem = ListItem(item)
+      newItem = ListItem(item, self.clearMouseOver)
       newItem.clicked.connect(self.itemClicked)
       self.allItems.append(newItem)
       return newItem

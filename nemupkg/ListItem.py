@@ -3,9 +3,10 @@ from PyQt4.QtCore import *
 import os
 
 class ListItem(QPushButton):
-   def __init__(self, item, parent = None):
+   def __init__(self, item, clearMouseOver, parent = None):
       QPushButton.__init__(self, parent)
       self.item = item
+      self.clearMouseOver = clearMouseOver
       self.mouseOver = False
       self.setText(item.name)
       self.setIcon(QIcon(item.icon))
@@ -19,6 +20,7 @@ class ListItem(QPushButton):
       
    def mousePressEvent(self, event):
       if event.button() == Qt.RightButton:
+         self.clearMouseOver()
          self.mouseOver = True
       QPushButton.mousePressEvent(self, event)
       
