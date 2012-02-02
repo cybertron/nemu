@@ -47,6 +47,7 @@ class SettingsForm(QDialog):
       importPageLayout.addWidget(self.importProgress)
       
       self.importStatus = QLabel()
+      self.importStatus.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Fixed)
       importPageLayout.addWidget(self.importStatus)
       
       aboutPage = QWidget()
@@ -136,7 +137,8 @@ class SettingsForm(QDialog):
       
       workingItems = []
       for f in files:
-         self.importStatus.setText('Importing' + f)
+         self.importStatus.setText('Importing ' + f)
+         qApp.processEvents()
          reader = MenuReader(f)
          newItems = reader.menuItems
          self.removeEmptyFolders(newItems)
