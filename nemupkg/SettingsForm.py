@@ -145,6 +145,7 @@ class SettingsForm(QDialog):
    def removeEmptyFolders(self, items):
       removed = True
       while removed:
+         toRemove = []
          removed = False
          for i in items:
             if i.folder:
@@ -154,8 +155,10 @@ class SettingsForm(QDialog):
                      empty = False
                      break
                if empty:
-                  items.remove(i)
+                  toRemove.append(i)
                   removed = True
+         items[:] = [i for i in items if i not in toRemove]
+                  
       
       
    def mergeMenus(self, items, mergeItems):

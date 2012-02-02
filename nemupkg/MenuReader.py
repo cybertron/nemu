@@ -124,6 +124,10 @@ class MenuReader:
                root = i
             else:
                return
+               
+      if root == None:
+         return
+         
       for i in self.menuItems:
          if i.parent == root:
             i.parent = None
