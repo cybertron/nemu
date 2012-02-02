@@ -5,6 +5,8 @@ from MenuItem import *
 class MenuReader:
    def __init__(self):
       self.xdgConfigDirs = self.getenv('XDG_CONFIG_DIRS')
+      if self.xdgConfigDirs == '':
+         self.xdgConfigDirs = '/etc/xdg'
       self.xdgDataDirs = self.getenv('XDG_DATA_DIRS')
       self.desktopEntries = dict()
       self.menus = []
@@ -15,7 +17,7 @@ class MenuReader:
       menuPrefix = self.getenv('XDG_MENU_PREFIX')
       if menuPrefix == '':
          menuPrefix = 'kde-4-'
-         #menuPrefix = 'kde4-'
+         menuPrefix = 'kde4-'
       menuPath = os.path.join('menus', menuPrefix + 'applications.menu')
       xdgMenu = self.findFile(self.xdgConfigDirs, menuPath)
       if xdgMenu == None or not os.path.exists(xdgMenu):
@@ -27,6 +29,8 @@ class MenuReader:
       self.loadMenu(self.doc.documentElement)
       
       self.buildMenu()
+      
+      self.checkSingleRoot()
       
       
    def getenv(self, key):
@@ -89,7 +93,7 @@ class MenuReader:
             self.readLogic(i, logic[i.nodeName])
          elif i.nodeName == 'Category' or i.nodeName == 'Filename':
             name = i.firstChild.nodeValue
-            logic[name] = i.nodeName
+            logic[name] = Menu.categoryFilenameID
             
             
    def buildMenu(self):
@@ -102,14 +106,28 @@ class MenuReader:
          i.menuItem = currMenu
          self.menuItems.append(currMenu)
          for key, value in self.desktopEntries.items():
-            if i.include(key, value.categories) and not value.noDisplay:
-               print 'Adding', value.name, value.categories, 'to', i.name
+            if i.include(key, value.categories, 'Or', i.logic['Or']) and not value.noDisplay:
                newItem = MenuItem()
                newItem.parent = currMenu
                newItem.name = value.name
                newItem.command = value.command
                newItem.icon = value.icon
                self.menuItems.append(newItem)
+               
+   # The menu file likely has a single root menu - we throw that out since
+   # we are the root menu and don't need that extra layer of indirection
+   def checkSingleRoot(self):
+      root = None
+      for i in self.menuItems:
+         if i.parent == None:
+            if root == None:
+               root = i
+            else:
+               return
+      for i in self.menuItems:
+         if i.parent == root:
+            i.parent = None
+      self.menuItems.remove(root)
          
             
 class DesktopEntry():
@@ -124,6 +142,7 @@ class DesktopEntry():
          for line in f:
             if line[:10] == 'Categories':
                self.categories = self.getValue(line)
+               self.categories = self.categories.split(';')
             if line[:5] == 'Name=':
                self.name = self.getValue(line)
             if line[:4] == 'Exec':
@@ -141,53 +160,47 @@ class DesktopEntry():
                
                
 class Menu():
+   categoryFilenameID = 1
    def __init__(self):
-      self.logic = dict()
-      self.logic['Or'] = dict()
+      self.logic = {'Or': dict()}
       self.parent = None
       self.name = 'The unnamed menu'
       self.menuItem = None
       
-   def include(self, filename, categories):
-      if ';' in categories:
-         cats = categories.split(';')
-      else:
-         cats = [categories]
-         
-      return self.includeLogic(filename, cats, self.logic)
       
-      
-   def includeLogic(self, filename, categories, logic):
-      for key, value in logic.items():
-         if key == 'And':
-            retval = True
-            for k, v in value.items():
-               if v == 'Category' or v == 'Filename':
-                  retval &= self.checkFile(k, filename, categories)
-               else:
-                  retval &= self.includeLogic(filename, categories, {k:v})
-            return retval
-         if key == 'Or':
+   # key and value should be an appropriate pair from self.logic
+   def include(self, filename, categories, key, value):
+      if key == 'And':
+         for k, v in value.items():
+            if v == self.categoryFilenameID:
+               retval = self.checkFile(k, filename, categories)
+            else:
+               retval = self.include(filename, categories, k, v)
+            if not retval:
+               return False
+         return True
+      elif key == 'Or':
+         for k, v in value.items():
+            if v == self.categoryFilenameID:
+               retval = self.checkFile(k, filename, categories)
+            else:
+               retval = self.include(filename, categories, k, v)
+            if retval:
+               return True
+         return False
+      elif key == 'Not':
+         for k, v in value.items():
             retval = False
-            for k, v in value.items():
-               if v == 'Category' or v == 'Filename':
-                  retval |= self.checkFile(k, filename, categories)
-               else:
-                  retval |= self.includeLogic(filename, categories, {k:v})
-            return retval
-         if key == 'Not':
-            for k, v in value.items():
-               retval = False
-               if v == 'Category' or v == 'Filename':
-                  retval = self.checkFile(k, filename, categories)
-               else:
-                  retval = self.includeLogic(filename, categories, {k:v})
-               if retval:
-                  return False
-            return True
-         else:
-            print 'Got unrecognized logic type', key
-            return False
+            if v == self.categoryFilenameID:
+               retval = self.checkFile(k, filename, categories)
+            else:
+               retval = self.include(filename, categories, k, v)
+            if retval:
+               return False
+         return True
+      else:
+         print 'Got unrecognized logic type', key
+         return False
       
    def checkFile(self, name, filename, categories):
       return name in categories or name == filename

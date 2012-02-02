@@ -3,6 +3,7 @@ from PyQt4.QtCore import *
 import pickle
 import os
 import copy
+import time
 from MenuReader import *
 from AddForm import *
 from MenuItem import *
@@ -12,6 +13,7 @@ from ListItem import *
 class MainForm(QDialog):
    def __init__(self, parent = None):
       QDialog.__init__(self, parent)
+      t = time.clock()
       self.holdOpen = False
       self.menuItems = []
       self.allItems = []
@@ -31,11 +33,23 @@ class MainForm(QDialog):
       
       self.setupUI()
       
+      print 'setupUI', time.clock() - t
+      
       self.setContextMenuPolicy(Qt.ActionsContextMenu)
       self.createMenu(self)
       
       self.menuReader = MenuReader()
-      self.menuItems = self.menuReader.menuItems
+      print 'menuReader', time.clock() - t
+      self.mergeMenu(self.menuReader.menuItems)
+      print 'merge', time.clock() - t
+      self.removeEmptyFolders()
+      print 'removeEmpty', time.clock() - t
+      
+      # Looking for icons is slow - just do it once
+      for i in self.menuItems:
+         i.findIcon()
+         
+      print 'findIcons', time.clock() - t
       
       self.refresh()
       
@@ -150,6 +164,7 @@ class MainForm(QDialog):
          item.parent = self.currentItem
          item.folder = form.folder
          item.icon = form.icon
+         item.findIcon()
          self.menuItems.append(item)
          self.refresh()
       
@@ -172,6 +187,7 @@ class MainForm(QDialog):
          item.command = form.command
          item.folder = form.folder
          item.icon = form.icon
+         item.findIcon()
          self.refresh()
       
       
@@ -198,6 +214,7 @@ class MainForm(QDialog):
    def getClicked(self):
       for i in self.allItems:
          if i.mouseOver:
+            i.mouseOver = False
             return i
       
       
@@ -205,21 +222,29 @@ class MainForm(QDialog):
       self.leftList.clear()
       self.rightList.clear()
       self.allItems = []
+      sortedLeft = []
+      sortedRight = []
       if self.currentItem != None:
          currParent = self.currentItem.parent
          for i in self.menuItems:
             if i.parent == currParent:
-               newItem = self.createItem(i)
-               self.leftList.add(newItem)
+               sortedLeft.append(i)
       else:
          for i in self.favorites:
-            newItem = self.createItem(i)
-            self.leftList.add(newItem)
+            sortedLeft.append(i)
       
       for i in self.menuItems:
          if i.parent == self.currentItem:
-            newItem = self.createItem(i)
-            self.rightList.add(newItem)
+            sortedRight.append(i)
+            
+      sortedLeft.sort(key = lambda x: x.name)
+      sortedLeft.sort(key = lambda x: not x.folder)
+      sortedRight.sort(key = lambda x: x.name)
+      sortedRight.sort(key = lambda x: not x.folder)
+      for i in sortedLeft:
+         self.leftList.add(self.createItem(i))
+      for i in sortedRight:
+         self.rightList.add(self.createItem(i))
       
       # Save the current menu status
       with open(self.menuFile, 'w') as f:
@@ -240,7 +265,11 @@ class MainForm(QDialog):
          self.setCurrentItem(sender.item)
          self.refresh()
       else:
-         os.system(sender.item.command + '&')
+         flags = ['f', 'F', 'u', 'U', 'd', 'D', 'n', 'N', 'i', 'c', 'k', 'v', 'm']
+         command = sender.item.command
+         for i in flags:
+            command = command.replace('%' + i, '')
+         os.system(command + '&')
          self.close()
          
          
@@ -262,4 +291,47 @@ class MainForm(QDialog):
          self.currentLabel.setText('')
          self.backButton.setText('Favorites')
          
+         
+   def mergeMenu(self, mergeItems):
+      parentMap = dict()
+      for i in mergeItems:
+         if i.parent in parentMap:
+            i.parent = parentMap[i.parent]
+         dup = None
+         for j in self.menuItems:
+            if self.checkDup(i, j):
+               dup = j
+               break
+         if dup == None:
+            self.menuItems.append(i)
+         else:
+            parentMap[i] = dup
+            
+                  
+   def checkDup(self, i, j):
+      if i.name == j.name:
+         iParent = i.parent
+         jParent = j.parent
+         while iParent != None and jParent != None and iParent.name == jParent.name:
+            iParent = iParent.parent
+            jParent = jParent.parent
+         if iParent == None and jParent == None:
+            return True
+      return False
+      
+      
+   def removeEmptyFolders(self):
+      removed = True
+      while removed:
+         removed = False
+         for i in self.menuItems:
+            if i.folder:
+               empty = True
+               for j in self.menuItems:
+                  if j.parent == i:
+                     empty = False
+                     break
+               if empty:
+                  self.menuItems.remove(i)
+                  removed = True
       

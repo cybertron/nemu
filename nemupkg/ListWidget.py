@@ -6,6 +6,7 @@ class ListWidget(QScrollArea):
       self.widget = QWidget() # Just adding the layout directly doesn't work right, so wrap it in a QWidget
       self.setWidget(self.widget)
       self.setWidgetResizable(True)
+      self.setMouseTracking(True)
       self.createLayout()
       
       
