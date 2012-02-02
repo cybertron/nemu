@@ -1,7 +1,7 @@
 import os
 
 class MenuItem:
-   iconTheme = 'oxygen'
+   iconTheme = ''
    def __init__(self):
       self.name = ''
       self.command = ''
@@ -31,10 +31,12 @@ class MenuItem:
             # Qt doesn't seem to like *.icon files so don't use them
             if i.startswith(icon + '.') and not i.endswith('.icon') or i == icon:
                return currPath
+               
             if i == self.iconTheme:
                retval = self.lookForIcon(icon, currPath, True)
                if retval != '':
                   return retval
+                  
             if os.path.isdir(currPath) and recurse:
                retval = self.lookForIcon(icon, currPath, recurse)
                if retval != '':

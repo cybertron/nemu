@@ -46,6 +46,9 @@ class SettingsForm(QDialog):
       self.importProgress = QProgressBar()
       importPageLayout.addWidget(self.importProgress)
       
+      self.importStatus = QLabel()
+      importPageLayout.addWidget(self.importStatus)
+      
       aboutPage = QWidget()
       aboutPageLayout = QVBoxLayout(aboutPage)
       aboutText = QTextEdit()
@@ -122,21 +125,38 @@ class SettingsForm(QDialog):
             
       # Our due diligence done, it's time to do the import
       MenuItem.iconTheme = str(self.themeCombo.currentText())
-      reader = MenuReader(str(self.importFileText.text()))
-      newItems = reader.menuItems
-      self.removeEmptyFolders(newItems)
+      filename = str(self.importFileText.text())
+      directory = os.path.join(os.path.dirname(filename), 'applications-merged')
+      applicationsMerged = []
+      if os.path.isdir(directory):
+         applicationsMerged = os.listdir(directory)
+         applicationsMerged[:] = [i for i in applicationsMerged if i.endswith('.menu')]
+         applicationsMerged[:] = [os.path.join(directory, i) for i in applicationsMerged]
+      files = [filename] + applicationsMerged
+      
+      workingItems = []
+      for f in files:
+         self.importStatus.setText('Importing' + f)
+         reader = MenuReader(f)
+         newItems = reader.menuItems
+         self.removeEmptyFolders(newItems)
+         
+         self.mergeMenus(workingItems, newItems)
+            
       if self.replaceCheck.isChecked():
-         self.parent.menuItems = newItems
+         self.parent.menuItems = workingItems
       else:
-         self.mergeMenus(self.parent.menuItems, newItems)
+         self.mergeMenus(self.parent.menuItems, workingItems)
          
       # Looking for icons is slow - just do it once
+      self.importStatus.setText('Loading icons')
       self.importProgress.setRange(0, len(self.parent.menuItems))
       count = 0
       for i in self.parent.menuItems:
          self.importProgress.setValue(count)
          i.findIcon()
          count += 1
+      self.importStatus.setText('Done')
       self.importProgress.setValue(len(self.parent.menuItems))
          
       self.parent.refresh()
