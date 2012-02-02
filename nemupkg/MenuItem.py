@@ -28,7 +28,8 @@ class MenuItem:
       if os.path.isdir(path):
          for i in os.listdir(path):
             currPath = os.path.join(path, i)
-            if i.startswith(icon + '.') or i == icon:
+            # Qt doesn't seem to like *.icon files so don't use them
+            if i.startswith(icon + '.') and not i.endswith('.icon') or i == icon:
                return currPath
             if i == self.iconTheme:
                retval = self.lookForIcon(icon, currPath, True)
