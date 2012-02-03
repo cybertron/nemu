@@ -8,6 +8,7 @@ class MenuItem:
       self.icon = ''
       self.parent = None
       self.folder = False
+      self.deleted = False
       
       
    def findIcon(self):
@@ -44,3 +45,10 @@ class MenuItem:
          if not recurse:
             return self.lookForIcon(icon, path, True)
       return ''
+      
+      
+   def mergeName(self):
+      if self.folder:
+         return self.name
+      else:
+         return self.command

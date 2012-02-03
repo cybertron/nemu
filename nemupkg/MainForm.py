@@ -212,10 +212,12 @@ class MainForm(QDialog):
       
    # Delete item and all of its children so we don't leave around orphaned items
    def delete(self, item):
-      self.menuItems[:] = [i for i in self.menuItems if i.parent != item]
+      for i in self.menuItems:
+         if i.parent == item:
+            i.deleted = True
       
       if item in self.menuItems:
-         self.menuItems.remove(item)
+         item.deleted = True
       if item in self.favorites:
          self.favorites.remove(item)
       
@@ -250,14 +252,14 @@ class MainForm(QDialog):
       if self.currentItem != None:
          currParent = self.currentItem.parent
          for i in self.menuItems:
-            if i.parent == currParent:
+            if i.parent == currParent and not i.deleted:
                sortedLeft.append(i)
       else:
          for i in self.favorites:
             sortedLeft.append(i)
       
       for i in self.menuItems:
-         if i.parent == self.currentItem:
+         if i.parent == self.currentItem and not i.deleted:
             sortedRight.append(i)
             
       sortedLeft.sort(key = lambda x: x.name)

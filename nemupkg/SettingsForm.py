@@ -200,10 +200,10 @@ class SettingsForm(QDialog):
             
             
    def checkDup(self, i, j):
-      if i.name == j.name:
+      if i.mergeName() == j.mergeName():
          iParent = i.parent
          jParent = j.parent
-         while iParent != None and jParent != None and iParent.name == jParent.name:
+         while iParent != None and jParent != None and iParent.mergeName() == jParent.mergeName():
             iParent = iParent.parent
             jParent = jParent.parent
          if iParent == None and jParent == None:
