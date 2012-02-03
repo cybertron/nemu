@@ -10,10 +10,13 @@ class MenuReader:
       self.xdgDataDirs = self.getenv('XDG_DATA_DIRS')
       self.xdgDataDirs += ':' + os.path.expanduser('~/.local/share')
       self.desktopEntries = dict()
+      self.desktopDirectories = dict()
       self.menus = []
       self.menuItems = []
       
-      self.loadDesktopEntries()
+      self.loadDesktopEntries('applications', self.desktopEntries)
+      
+      self.loadDesktopEntries('desktop-directories', self.desktopDirectories)
       
       if xdgMenu == None:
          menuPrefix = self.getenv('XDG_MENU_PREFIX')
@@ -24,7 +27,11 @@ class MenuReader:
          print 'Failed to find menu file'
          return
 
-      self.doc = parse(xdgMenu)
+      try:
+         self.doc = parse(xdgMenu)
+      except:
+         print 'Failed to parse menu:', xdgMenu
+         return
       
       self.loadMenu(self.doc.documentElement)
       
@@ -54,20 +61,20 @@ class MenuReader:
             return current
             
             
-   def loadDesktopEntries(self):
+   def loadDesktopEntries(self, directory, entries):
       for base in self.splitDirs(self.xdgDataDirs):
-         currPath = os.path.join(base, 'applications')
+         currPath = os.path.join(base, directory)
          if os.path.isdir(currPath):
-            self.loadEntryDirectory(currPath)
+            self.loadEntryDirectory(currPath, entries)
             
             
-   def loadEntryDirectory(self, path, prefix = ''):
+   def loadEntryDirectory(self, path, entries, prefix = ''):
       for i in os.listdir(path):
          currPath = os.path.join(path, i)
          if os.path.isdir(currPath):
-            self.loadEntryDirectory(currPath, prefix + i + '-')
+            self.loadEntryDirectory(currPath, entries, prefix + i + '-')
          else:
-            self.desktopEntries[prefix + i] = DesktopEntry(currPath)
+            entries[prefix + i] = DesktopEntry(currPath)
             
             
    def loadMenu(self, element, parent = None):
@@ -84,6 +91,10 @@ class MenuReader:
             return
          elif i.nodeName == 'Include':
             self.readLogic(i, current.logic['Or'])
+         elif i.nodeName == 'Directory':
+            filename = i.firstChild.nodeValue
+            if filename in self.desktopDirectories:
+               current.name = self.desktopDirectories[filename].name
                   
                   
    def readLogic(self, element, logic):
@@ -133,7 +144,7 @@ class MenuReader:
             i.parent = None
       self.menuItems.remove(root)
          
-            
+
 class DesktopEntry():
    def __init__(self, path):
       self.path = path
@@ -156,13 +167,13 @@ class DesktopEntry():
             if line[:9] == 'NoDisplay':
                if self.getValue(line).lower() == 'true':
                   self.noDisplay = True
-               
+                  
    def getValue(self, line):
       s = line[:-1] # Remove \n
       s = s.split('=')
       return '='.join(s[1:])
-               
-               
+      
+      
 class Menu():
    categoryFilenameID = 1
    def __init__(self):

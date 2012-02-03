@@ -16,6 +16,7 @@ class ListItem(QPushButton):
       self.setMinimumHeight(35)
       self.setFont(QFont(self.font().family(), 12))
       self.setStyleSheet('text-align: left')
+      self.setToolTip(item.name)
       
       
    def mousePressEvent(self, event):

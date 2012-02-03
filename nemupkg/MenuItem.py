@@ -19,7 +19,7 @@ class MenuItem:
          self.icon = 'folder'
          
       print 'Searching for', self.name, 'icon'
-      for basePath in ['/usr/share/icons', '/usr/local/share/icons', '/usr/share/pixmaps']:
+      for basePath in ['/usr/share/icons', '/usr/local/share/icons', '/usr/share/pixmaps', os.path.expanduser('~/.local/share/icons')]:
          iconPath = self.lookForIcon(self.icon, basePath)
          if iconPath != '':
             break
@@ -27,7 +27,9 @@ class MenuItem:
             
    def lookForIcon(self, icon, path, recurse = False):
       if os.path.isdir(path):
-         for i in os.listdir(path):
+         listdir = os.listdir(path)
+         listdir.sort(reverse = True) # Make sure we get higher res icons first
+         for i in listdir:
             currPath = os.path.join(path, i)
             # Qt doesn't seem to like *.icon files so don't use them
             if i.startswith(icon + '.') and not i.endswith('.icon') or i == icon:
