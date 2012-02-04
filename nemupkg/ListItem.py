@@ -1,15 +1,19 @@
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
+from PyQt4.QtSvg import QSvgRenderer
 import os
+from IconCache import *
+
 
 class ListItem(QPushButton):
+   iconCache = IconCache()
    def __init__(self, item, clearMouseOver, parent = None):
       QPushButton.__init__(self, parent)
       self.item = item
       self.clearMouseOver = clearMouseOver
       self.mouseOver = False
       self.setText(item.name)
-      self.setIcon(QIcon(item.icon))
+      self.setIcon(ListItem.iconCache[item.icon])
       self.setIconSize(QSize(24, 24))
       self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
       self.setMaximumHeight(75)
@@ -24,5 +28,6 @@ class ListItem(QPushButton):
          self.clearMouseOver()
          self.mouseOver = True
       QPushButton.mousePressEvent(self, event)
+      
       
       

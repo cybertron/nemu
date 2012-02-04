@@ -11,6 +11,7 @@ from MenuItem import *
 from ListWidget import *
 from ListItem import *
 from SettingsForm import *
+from IconCache import *
 
 class MainForm(QDialog):
    def __init__(self, parent = None):
@@ -382,6 +383,7 @@ class MainForm(QDialog):
          self.menuItems = recObject['menuItems']
          self.favorites = recObject['favorites']
          self.settings = recObject['settings']
+         IconCache.icons = recObject['iconCache']
       else:
          print 'No server running'
       
@@ -395,6 +397,7 @@ class MainForm(QDialog):
          sendObject['menuItems'] = self.menuItems
          sendObject['favorites'] = self.favorites
          sendObject['settings'] = self.settings
+         sendObject['iconCache'] = IconCache.icons
          print 'Sent', socket.write(pickle.dumps(sendObject))
          socket.flush()
          print 'Sent', socket.write('@EOF@')
