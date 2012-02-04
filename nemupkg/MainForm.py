@@ -1,8 +1,10 @@
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
+from PyQt4.QtNetwork import *
 import pickle
 import os
 import copy
+import sys
 from MenuReader import *
 from AddForm import *
 from MenuItem import *
@@ -18,22 +20,34 @@ class MainForm(QDialog):
       self.allItems = []
       self.favorites = []
       self.currentItem = None
+      self.connected = False
+      self.menuFile = os.path.expanduser('~/.nemu/menu')
+      self.favoritesFile = os.path.expanduser('~/.nemu/favorites')
+      self.settingsFile = os.path.expanduser('~/.nemu/settings')
       self.initSettings()
       
-      self.configDir = os.path.expanduser('~/.nemu')
-      if not os.path.isdir(self.configDir):
-         os.mkdir(self.configDir)
-      self.menuFile = os.path.expanduser('~/.nemu/menu')
-      self.menuItems = self.loadConfig(self.menuFile, self.menuItems)
-      self.favoritesFile = os.path.expanduser('~/.nemu/favorites')
-      self.favorites = self.loadConfig(self.favoritesFile, self.favorites)
-      self.settingsFile = os.path.expanduser('~/.nemu/settings')
-      self.settings = self.loadConfig(self.settingsFile, self.settings)
+      self.connectToRunning()
       
-      # This should never happen, but unfortunately bugs do, so clean up orphaned items.
-      # We need to do this because these items won't show up in the UI, but may interfere with
-      # merges if they duplicate something that is being merged in.
-      self.menuItems[:] = [i for i in self.menuItems if i.parent == None or i.parent in self.menuItems]
+      self.server = QLocalServer()
+      self.server.newConnection.connect(self.handleConnection)
+      QLocalServer.removeServer('nemuSocket')
+      self.server.listen('nemuSocket')
+      
+      if not self.connected:
+         self.configDir = os.path.expanduser('~/.nemu')
+         if not os.path.isdir(self.configDir):
+            os.mkdir(self.configDir)
+         self.menuItems = self.loadConfig(self.menuFile, self.menuItems)
+         self.favorites = self.loadConfig(self.favoritesFile, self.favorites)
+         # Don't load directly into self.settings so we can add new default values as needed
+         tempSettings = self.loadConfig(self.settingsFile, self.settings)
+         for key, value in tempSettings.items():
+            self.settings[key] = value
+         
+         # This should never happen, but unfortunately bugs do, so clean up orphaned items.
+         # We need to do this because these items won't show up in the UI, but may interfere with
+         # merges if they duplicate something that is being merged in.
+         self.menuItems[:] = [i for i in self.menuItems if i.parent == None or i.parent in self.menuItems]
       
       self.setupUI()
       
@@ -52,6 +66,7 @@ class MainForm(QDialog):
       self.settings = dict()
       self.settings['width'] = 400
       self.settings['height'] = 400
+      self.settings['quit'] = False
       
       
    def loadConfig(self, filename, default):
@@ -64,16 +79,14 @@ class MainForm(QDialog):
       
    def setupUI(self):
       self.resize(self.settings['width'], self.settings['height'])
-      self.setWindowFlags(Qt.FramelessWindowHint)
+      self.setWindowFlags(Qt.FramelessWindowHint | Qt.CustomizeWindowHint | Qt.WindowStaysOnTopHint)
       self.setWindowTitle('Nemu')
       
       iconPath = os.path.join(os.path.dirname(__file__), 'images')
       iconPath = os.path.join(iconPath, 'nemu.png')
       self.setWindowIcon(QIcon(iconPath))
       
-      desktop = qApp.desktop()
-      screenSize = desktop.availableGeometry(QCursor.pos())
-      self.move(screenSize.x(), screenSize.y() + screenSize.height() - self.height())
+      self.place()
       
       self.buttonListLayout = QVBoxLayout(self)
       self.setMargins(self.buttonListLayout)
@@ -137,14 +150,31 @@ class MainForm(QDialog):
    def changeEvent(self, event):
       if event.type() == QEvent.ActivationChange and not self.isActiveWindow() and not self.holdOpen:
          print "Lost focus"
+         self.hideOrClose()
+         
+   def hideOrClose(self):
+      if self.settings['quit']:
          self.close()
+      else:
+         self.hide()
          
    def closeEvent(self, event):
+      self.saveSettings()
+      
+   def hideEvent(self, event):
+      self.saveSettings()
+      
+   def saveSettings(self):
       self.settings['splitterState'] = self.listSplitter.saveState()
       self.settings['width'] = self.width()
       self.settings['height'] = self.height()
       with open(self.settingsFile, 'w') as f:
          pickle.dump(self.settings, f)
+         
+   def place(self):
+      desktop = qApp.desktop()
+      screenSize = desktop.availableGeometry(QCursor.pos())
+      self.move(screenSize.x(), screenSize.y() + screenSize.height() - self.height())
          
          
    def newClicked(self):
@@ -295,7 +325,7 @@ class MainForm(QDialog):
          for i in flags:
             command = command.replace('%' + i, '')
          os.system(command + '&')
-         self.close()
+         self.hideOrClose()
          
          
    def backClicked(self):
@@ -319,14 +349,58 @@ class MainForm(QDialog):
          
    def settingsClicked(self):
       form = SettingsForm(self)
+      form.quitCheck.setChecked(self.settings['quit'])
       
       self.holdOpen = True
       form.exec_()
       self.holdOpen = False
       
+      if form.accepted:
+         self.settings['quit'] = form.quitCheck.isChecked()
+      
       
    def firstRun(self):
       QMessageBox.information(self, 'First Time?', 'Your menu is currently empty.  It is recommended that you import an existing menu file.')
       self.settingsClicked()
+      
+      
+   def connectToRunning(self):
+      socket = QLocalSocket()
+      socket.connectToServer('nemuSocket')
+      
+      if socket.state() == QLocalSocket.ConnectedState:
+         self.connected = True
+         objString = ''
+         while socket.state() == QLocalSocket.ConnectedState and not objString.endswith('@EOF@'):
+            while socket.bytesAvailable() < 1:
+               socket.waitForReadyRead()
+            data = socket.read(32768)
+            objString += data
+         
+         print 'Read', len(objString)
+         recObject = pickle.loads(objString[:-5])
+         self.menuItems = recObject['menuItems']
+         self.favorites = recObject['favorites']
+         self.settings = recObject['settings']
+      else:
+         print 'No server running'
+      
+      
+   def handleConnection(self):
+      while self.server.hasPendingConnections():
+         socket = self.server.nextPendingConnection()
+         print 'Got connection'
+         
+         sendObject = dict()
+         sendObject['menuItems'] = self.menuItems
+         sendObject['favorites'] = self.favorites
+         sendObject['settings'] = self.settings
+         print 'Sent', socket.write(pickle.dumps(sendObject))
+         socket.flush()
+         print 'Sent', socket.write('@EOF@')
+         socket.flush()
+         
+         del socket
+      sys.exit()
       
       

@@ -1,6 +1,6 @@
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
-import os
+import os, sys
 from MenuReader import *
 from MenuItem import *
 
@@ -50,6 +50,15 @@ class SettingsForm(QDialog):
       self.importStatus.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Fixed)
       importPageLayout.addWidget(self.importStatus)
       
+      quitPage = QWidget()
+      quitPageLayout = QVBoxLayout(quitPage)
+      quitText = QTextEdit()
+      quitText.append('For performance reasons, Nemu only hides itself when it loses focus.  If you want it to quit completely when it is hidden, check the box below.  Note that this will cause it to start more slowly.')
+      quitText.setReadOnly(True)
+      self.quitCheck = QCheckBox('Quit instead of hide')
+      quitPageLayout.addWidget(quitText)
+      quitPageLayout.addWidget(self.quitCheck)
+      
       aboutPage = QWidget()
       aboutPageLayout = QVBoxLayout(aboutPage)
       aboutText = QTextEdit()
@@ -63,6 +72,7 @@ class SettingsForm(QDialog):
       aboutPageLayout.addWidget(aboutText)
       
       self.tabs.addTab(importPage, 'Import Menu')
+      self.tabs.addTab(quitPage, 'Quit')
       self.tabs.addTab(aboutPage, 'About')
       
       self.bottomButtonLayout = QHBoxLayout()
@@ -209,4 +219,8 @@ class SettingsForm(QDialog):
          if iParent == None and jParent == None:
             return True
       return False
+      
+      
+   def quit(self):
+      sys.exit()
       
