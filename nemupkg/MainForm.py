@@ -85,7 +85,7 @@ class MainForm(QDialog):
       
       iconPath = os.path.join(os.path.dirname(__file__), 'images')
       iconPath = os.path.join(iconPath, 'nemu.png')
-      self.setWindowIcon(QIcon(iconPath))
+      self.setWindowIcon(IconCache()[iconPath])
       
       self.place()
       
