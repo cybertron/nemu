@@ -8,7 +8,7 @@ class IconCache():
    @staticmethod
    def __getitem__(key):
       if key not in IconCache.icons:
-         if not key.endswith('.svg'):
+         if not key.endswith('.svg') and not key.endswith('.svgz'):
             image = QImage(key).scaled(24, 24)
          else:
             svg = QSvgRenderer(key)

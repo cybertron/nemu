@@ -1,10 +1,12 @@
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 from PyQt4.QtNetwork import *
-import pickle
+import cPickle
 import os
 import copy
 import sys
+import time
+import subprocess
 from MenuReader import *
 from AddForm import *
 from MenuItem import *
@@ -55,7 +57,7 @@ class MainForm(QDialog):
       self.setContextMenuPolicy(Qt.ActionsContextMenu)
       self.createMenu(self)
       
-      self.refresh()
+      self.refresh(False)
       
       if len(self.menuItems) == 0:
          self.firstRun()
@@ -72,8 +74,8 @@ class MainForm(QDialog):
       
    def loadConfig(self, filename, default):
       if os.path.exists(filename):
-         with open(filename) as f:
-            return pickle.load(f)
+         with open(filename, 'rb') as f:
+            return cPickle.load(f)
       else:
          return default
       
@@ -169,8 +171,8 @@ class MainForm(QDialog):
       self.settings['splitterState'] = self.listSplitter.saveState()
       self.settings['width'] = self.width()
       self.settings['height'] = self.height()
-      with open(self.settingsFile, 'w') as f:
-         pickle.dump(self.settings, f)
+      with open(self.settingsFile, 'wb') as f:
+         cPickle.dump(self.settings, f)
          
    def place(self):
       desktop = qApp.desktop()
@@ -274,7 +276,7 @@ class MainForm(QDialog):
       self.rightList.mouseOver = False
       
       
-   def refresh(self):
+   def refresh(self, save = True):
       self.leftList.clear()
       self.rightList.clear()
       self.allItems = []
@@ -301,12 +303,13 @@ class MainForm(QDialog):
          self.leftList.add(self.createItem(i))
       for i in sortedRight:
          self.rightList.add(self.createItem(i))
-      
-      # Save the current menu status
-      with open(self.menuFile, 'w') as f:
-         pickle.dump(self.menuItems, f)
-      with open(self.favoritesFile, 'w') as f:
-         pickle.dump(self.favorites, f)
+         
+      if save:
+         # Save the current menu status
+         with open(self.menuFile, 'wb') as f:
+            cPickle.dump(self.menuItems, f)
+         with open(self.favoritesFile, 'wb') as f:
+            cPickle.dump(self.favorites, f)
          
    def createItem(self, item):
       newItem = ListItem(item, self.clearMouseOver)
@@ -319,20 +322,22 @@ class MainForm(QDialog):
       sender = self.sender()
       if sender.item.folder:
          self.setCurrentItem(sender.item)
-         self.refresh()
+         self.refresh(False)
       else:
          flags = ['f', 'F', 'u', 'U', 'd', 'D', 'n', 'N', 'i', 'c', 'k', 'v', 'm']
          command = sender.item.command
          for i in flags:
             command = command.replace('%' + i, '')
-         os.system(command + '&')
+         # Need to redirect stdout and stderr so if the process writes something it won't fail
+         with open(os.path.devnull, 'w') as devnull:
+            subprocess.Popen(command + '&', stdout=devnull, stderr=devnull, shell=True)
          self.hideOrClose()
          
          
    def backClicked(self):
       if self.currentItem:
          self.setCurrentItem(self.currentItem.parent)
-         self.refresh()
+         self.refresh(False)
          
          
    def setCurrentItem(self, item):
@@ -368,18 +373,29 @@ class MainForm(QDialog):
    def connectToRunning(self):
       socket = QLocalSocket()
       socket.connectToServer('nemuSocket')
+      socket.waitForConnected(500)
       
       if socket.state() == QLocalSocket.ConnectedState:
          self.connected = True
          objString = ''
-         while socket.state() == QLocalSocket.ConnectedState and not objString.endswith('@EOF@'):
-            while socket.bytesAvailable() < 1:
-               socket.waitForReadyRead()
-            data = socket.read(32768)
-            objString += data
+         start = time.time()
+         while not objString.endswith('@EOF@'):
+            if time.time() - start > 1:
+               break
+            socket.waitForReadyRead(1000)
+            while socket.bytesAvailable() > 0:
+               data = socket.read(32768)
+               objString += data
          
+         if not objString.endswith('@EOF@'):
+            with open('/tmp/nemudebug', 'a') as f:
+               f.write('Invalid data\n')
+               f.write(objString)
+            self.connected = False
+            return
+            
          print 'Read', len(objString)
-         recObject = pickle.loads(objString[:-5])
+         recObject = cPickle.loads(objString[:-5])
          self.menuItems = recObject['menuItems']
          self.favorites = recObject['favorites']
          self.settings = recObject['settings']
@@ -398,9 +414,9 @@ class MainForm(QDialog):
          sendObject['favorites'] = self.favorites
          sendObject['settings'] = self.settings
          sendObject['iconCache'] = IconCache.icons
-         print 'Sent', socket.write(pickle.dumps(sendObject))
+         print 'Sent', socket.write(cPickle.dumps(sendObject))
          socket.flush()
-         print 'Sent', socket.write('@EOF@')
+         socket.write('@EOF@')
          socket.flush()
          
          del socket
