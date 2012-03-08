@@ -53,7 +53,7 @@ class SettingsForm(QDialog):
       quitPage = QWidget()
       quitPageLayout = QVBoxLayout(quitPage)
       quitText = QTextEdit()
-      quitText.append('For performance reasons, Nemu only hides itself when it loses focus.  If you want it to quit completely when it is hidden, check the box below.  Note that this will cause it to start more slowly.')
+      quitText.append('For performance reasons, Nemu only hides itself when it loses focus.  If this causes problems, such as Nemu not hiding properly, click the box below to force it to quit completely.  Note that this will likely cause it to start more slowly.')
       quitText.setReadOnly(True)
       self.quitCheck = QCheckBox('Quit instead of hide')
       quitPageLayout.addWidget(quitText)
@@ -86,7 +86,7 @@ class SettingsForm(QDialog):
       
       self.mainLayout.addLayout(self.bottomButtonLayout)
       
-      self.resize(500, 250)
+      self.resize(500, 280)
       
       
    def addWidgets(self, layout, name, widgets):

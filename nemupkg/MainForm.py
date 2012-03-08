@@ -6,7 +6,7 @@ import os
 import copy
 import sys
 import time
-import subprocess
+from subprocess import *
 from MenuReader import *
 from AddForm import *
 from MenuItem import *
@@ -18,39 +18,39 @@ from IconCache import *
 class MainForm(QDialog):
    def __init__(self, parent = None):
       QDialog.__init__(self, parent)
+      
+      # If a Nemu instance is already running, this is as far as we go
+      self.connectToRunning()
+      
       self.holdOpen = False
       self.menuItems = []
       self.allItems = []
       self.favorites = []
       self.currentItem = None
-      self.connected = False
       self.menuFile = os.path.expanduser('~/.nemu/menu')
       self.favoritesFile = os.path.expanduser('~/.nemu/favorites')
       self.settingsFile = os.path.expanduser('~/.nemu/settings')
       self.initSettings()
-      
-      self.connectToRunning()
-      
+
       self.server = QLocalServer()
       self.server.newConnection.connect(self.handleConnection)
       QLocalServer.removeServer('nemuSocket')
       self.server.listen('nemuSocket')
       
-      if not self.connected:
-         self.configDir = os.path.expanduser('~/.nemu')
-         if not os.path.isdir(self.configDir):
-            os.mkdir(self.configDir)
-         self.menuItems = self.loadConfig(self.menuFile, self.menuItems)
-         self.favorites = self.loadConfig(self.favoritesFile, self.favorites)
-         # Don't load directly into self.settings so we can add new default values as needed
-         tempSettings = self.loadConfig(self.settingsFile, self.settings)
-         for key, value in tempSettings.items():
-            self.settings[key] = value
-         
-         # This should never happen, but unfortunately bugs do, so clean up orphaned items.
-         # We need to do this because these items won't show up in the UI, but may interfere with
-         # merges if they duplicate something that is being merged in.
-         self.menuItems[:] = [i for i in self.menuItems if i.parent == None or i.parent in self.menuItems]
+      self.configDir = os.path.expanduser('~/.nemu')
+      if not os.path.isdir(self.configDir):
+         os.mkdir(self.configDir)
+      self.menuItems = self.loadConfig(self.menuFile, self.menuItems)
+      self.favorites = self.loadConfig(self.favoritesFile, self.favorites)
+      # Don't load directly into self.settings so we can add new default values as needed
+      tempSettings = self.loadConfig(self.settingsFile, self.settings)
+      for key, value in tempSettings.items():
+         self.settings[key] = value
+      
+      # This should never happen, but unfortunately bugs do, so clean up orphaned items.
+      # We need to do this because these items won't show up in the UI, but may interfere with
+      # merges if they duplicate something that is being merged in.
+      self.menuItems[:] = [i for i in self.menuItems if i.parent == None or i.parent in self.menuItems]
       
       self.setupUI()
       
@@ -63,6 +63,10 @@ class MainForm(QDialog):
          self.firstRun()
       
       self.show()
+      
+      self.keepaliveTimer = QTimer(self)
+      self.keepaliveTimer.timeout.connect(self.keepalive)
+      self.keepaliveTimer.start(60000)
       
       
    def initSettings(self):
@@ -83,7 +87,9 @@ class MainForm(QDialog):
    def setupUI(self):
       self.resize(self.settings['width'], self.settings['height'])
       self.setWindowFlags(Qt.FramelessWindowHint | Qt.CustomizeWindowHint | Qt.WindowStaysOnTopHint)
+      #self.setWindowFlags(Qt.X11BypassWindowManagerHint)
       self.setWindowTitle('Nemu')
+      self.setMouseTracking(True)
       
       iconPath = os.path.join(os.path.dirname(__file__), 'images')
       iconPath = os.path.join(iconPath, 'nemu.png')
@@ -150,11 +156,6 @@ class MainForm(QDialog):
       widget.insertAction(None, deleteAction)
       
       
-   def changeEvent(self, event):
-      if event.type() == QEvent.ActivationChange and not self.isActiveWindow() and not self.holdOpen:
-         print "Lost focus"
-         self.hideOrClose()
-         
    def hideOrClose(self):
       if self.settings['quit']:
          self.close()
@@ -165,8 +166,23 @@ class MainForm(QDialog):
       self.saveSettings()
       
    def hideEvent(self, event):
+      self.releaseMouse()
       self.saveSettings()
       
+   def mouseMoveEvent(self, event):
+      if self.geometry().contains(event.globalPos()):
+         self.releaseMouse()
+      
+   def leaveEvent(self, event):
+      # If we set holdOpen, it means that we've opened a dialog, so we shouldn't grab
+      if not self.holdOpen:
+         self.grabMouse()
+      
+   def mousePressEvent(self, event):
+      if not self.geometry().contains(event.globalPos()):
+         self.hideOrClose()
+         
+
    def saveSettings(self):
       self.settings['splitterState'] = self.listSplitter.saveState()
       self.settings['width'] = self.width()
@@ -330,7 +346,7 @@ class MainForm(QDialog):
             command = command.replace('%' + i, '')
          # Need to redirect stdout and stderr so if the process writes something it won't fail
          with open(os.path.devnull, 'w') as devnull:
-            subprocess.Popen(command + '&', stdout=devnull, stderr=devnull, shell=True)
+            Popen(command + '&', stdout=devnull, stderr=devnull, shell=True)
          self.hideOrClose()
          
          
@@ -359,6 +375,8 @@ class MainForm(QDialog):
       
       self.holdOpen = True
       form.exec_()
+      if not self.geometry().contains(QCursor.pos()):
+         self.grabMouse()
       self.holdOpen = False
       
       if form.accepted:
@@ -373,53 +391,24 @@ class MainForm(QDialog):
    def connectToRunning(self):
       socket = QLocalSocket()
       socket.connectToServer('nemuSocket')
-      socket.waitForConnected(500)
+      socket.waitForConnected(1000)
       
       if socket.state() == QLocalSocket.ConnectedState:
-         self.connected = True
-         objString = ''
-         start = time.time()
-         while not objString.endswith('@EOF@'):
-            if time.time() - start > 1:
-               break
-            socket.waitForReadyRead(1000)
-            while socket.bytesAvailable() > 0:
-               data = socket.read(32768)
-               objString += data
-         
-         if not objString.endswith('@EOF@'):
-            with open('/tmp/nemudebug', 'a') as f:
-               f.write('Invalid data\n')
-               f.write(objString)
-            self.connected = False
-            return
-            
-         print 'Read', len(objString)
-         recObject = cPickle.loads(objString[:-5])
-         self.menuItems = recObject['menuItems']
-         self.favorites = recObject['favorites']
-         self.settings = recObject['settings']
-         IconCache.icons = recObject['iconCache']
+         sys.exit()
       else:
          print 'No server running'
       
       
    def handleConnection(self):
-      while self.server.hasPendingConnections():
-         socket = self.server.nextPendingConnection()
-         print 'Got connection'
-         
-         sendObject = dict()
-         sendObject['menuItems'] = self.menuItems
-         sendObject['favorites'] = self.favorites
-         sendObject['settings'] = self.settings
-         sendObject['iconCache'] = IconCache.icons
-         print 'Sent', socket.write(cPickle.dumps(sendObject))
-         socket.flush()
-         socket.write('@EOF@')
-         socket.flush()
-         
-         del socket
-      sys.exit()
+      self.currentItem = None
+      self.refresh(False)
+      self.show()
+      return
       
       
+   # Call periodically to keep data resident in memory (hopefully)
+   def keepalive(self):
+      if self.isHidden():
+         self.refresh(False)
+         
+         
