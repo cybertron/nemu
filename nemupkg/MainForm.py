@@ -170,17 +170,20 @@ class MainForm(QDialog):
       self.saveSettings()
       
    def mouseMoveEvent(self, event):
-      if self.geometry().contains(event.globalPos()):
+      if self.hasMouse():
          self.releaseMouse()
       
    def leaveEvent(self, event):
       # If we set holdOpen, it means that we've opened a dialog, so we shouldn't grab
-      if not self.holdOpen:
+      if not self.hasMouse():
          self.grabMouse()
       
    def mousePressEvent(self, event):
-      if not self.geometry().contains(event.globalPos()):
+      if not self.hasMouse():
          self.hideOrClose()
+         
+   def hasMouse(self):
+      return self.geometry().contains(QCursor.pos())
          
 
    def saveSettings(self):
@@ -201,6 +204,7 @@ class MainForm(QDialog):
       
       self.holdOpen = True
       form.exec_()
+      self.checkMouse()
       self.holdOpen = False
       
       if form.accepted:
@@ -241,6 +245,7 @@ class MainForm(QDialog):
       
       self.holdOpen = True
       form.exec_()
+      self.checkMouse()
       self.holdOpen = False
       
       if form.accepted:
@@ -250,6 +255,11 @@ class MainForm(QDialog):
          item.icon = form.icon
          item.findIcon()
          self.refresh()
+         
+         
+   def checkMouse(self):
+      if not self.hasMouse():
+         self.grabMouse()
       
       
    def deleteClicked(self):
@@ -375,8 +385,7 @@ class MainForm(QDialog):
       
       self.holdOpen = True
       form.exec_()
-      if not self.geometry().contains(QCursor.pos()):
-         self.grabMouse()
+      self.checkMouse()
       self.holdOpen = False
       
       if form.accepted:
@@ -400,7 +409,7 @@ class MainForm(QDialog):
       
       
    def handleConnection(self):
-      self.currentItem = None
+      self.setCurrentItem(None)
       self.refresh(False)
       self.show()
       return
