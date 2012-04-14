@@ -14,6 +14,9 @@ class AddForm(QDialog):
       commandBrowse.clicked.connect(self.commandBrowseClicked)
       self.addTriple('Command', self.commandBox, commandBrowse)
       
+      self.workingBox = QLineEdit()
+      self.addPair('Working Directory', self.workingBox)
+      
       self.iconBox = QLineEdit()
       iconSelect = QPushButton('Select')
       iconSelect.clicked.connect(self.iconSelectClicked)
@@ -55,6 +58,7 @@ class AddForm(QDialog):
       self.accepted = True
       self.name = str(self.nameBox.text())
       self.command = str(self.commandBox.text())
+      self.working = str(self.workingBox.text())
       self.folder = self.folderCheck.isChecked()
       self.icon = str(self.iconBox.text())
       self.close()
@@ -74,6 +78,7 @@ class AddForm(QDialog):
    def populateFields(self):
       self.nameBox.setText(self.name)
       self.commandBox.setText(self.command)
+      self.workingBox.setText(self.working)
       self.folderCheck.setChecked(self.folder)
       self.iconBox.setText(self.icon)
       

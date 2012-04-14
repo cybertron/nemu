@@ -122,6 +122,7 @@ class MenuReader:
                newItem.parent = currMenu
                newItem.name = value.name
                newItem.command = value.command
+               newItem.working = value.working
                newItem.icon = value.icon
                self.menuItems.append(newItem)
                
@@ -152,6 +153,7 @@ class DesktopEntry():
       self.name = ''
       self.command = ''
       self.icon = ''
+      self.working = ''
       self.noDisplay = False
       with open(path) as f:
          for line in f:
@@ -164,6 +166,8 @@ class DesktopEntry():
                self.command = self.getValue(line)
             if line[:4] == 'Icon':
                self.icon = self.getValue(line)
+            if line[:4] == 'Path':
+               self.working = self.getValue(line)
             if line[:9] == 'NoDisplay':
                if self.getValue(line).lower() == 'true':
                   self.noDisplay = True

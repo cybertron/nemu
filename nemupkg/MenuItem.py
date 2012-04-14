@@ -6,6 +6,7 @@ class MenuItem:
       self.name = ''
       self.command = ''
       self.icon = ''
+      self.working = ''
       self.parent = None
       self.folder = False
       self.deleted = False
