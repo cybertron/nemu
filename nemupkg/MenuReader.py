@@ -74,7 +74,9 @@ class MenuReader:
          if os.path.isdir(currPath):
             self.loadEntryDirectory(currPath, entries, prefix + i + '-')
          else:
-            entries[prefix + i] = DesktopEntry(currPath)
+            # Sometimes we'll find broken links, need to check for that
+            if os.path.exists(currPath):
+               entries[prefix + i] = DesktopEntry(currPath)
             
             
    def loadMenu(self, element, parent = None):
@@ -122,6 +124,7 @@ class MenuReader:
                newItem.parent = currMenu
                newItem.name = value.name
                newItem.command = value.command
+               newItem.working = value.working
                newItem.icon = value.icon
                self.menuItems.append(newItem)
                
@@ -152,6 +155,7 @@ class DesktopEntry():
       self.name = ''
       self.command = ''
       self.icon = ''
+      self.working = ''
       self.noDisplay = False
       with open(path) as f:
          for line in f:
@@ -164,6 +168,8 @@ class DesktopEntry():
                self.command = self.getValue(line)
             if line[:4] == 'Icon':
                self.icon = self.getValue(line)
+            if line[:4] == 'Path':
+               self.working = self.getValue(line)
             if line[:9] == 'NoDisplay':
                if self.getValue(line).lower() == 'true':
                   self.noDisplay = True

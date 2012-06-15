@@ -43,6 +43,11 @@ class SettingsForm(QDialog):
       self.importButton.clicked.connect(self.importClicked)
       importPageLayout.addWidget(self.importButton)
       
+      self.refreshButton = QPushButton('Refresh Existing')
+      self.refreshButton.clicked.connect(self.refreshClicked)
+      self.refreshButton.setToolTip('Import any items added to previously imported menus')
+      importPageLayout.addWidget(self.refreshButton)
+      
       self.importProgress = QProgressBar()
       importPageLayout.addWidget(self.importProgress)
       
@@ -137,6 +142,11 @@ class SettingsForm(QDialog):
       # Our due diligence done, it's time to do the import
       MenuItem.iconTheme = str(self.themeCombo.currentText())
       filename = str(self.importFileText.text())
+      self.parent.settings['imported'].append(filename)
+      self.doImport(filename)
+      
+      
+   def doImport(self, filename):
       directory = os.path.join(os.path.dirname(filename), 'applications-merged')
       applicationsMerged = []
       if os.path.isdir(directory):
@@ -172,6 +182,13 @@ class SettingsForm(QDialog):
       self.importProgress.setValue(len(self.parent.menuItems))
          
       self.parent.refresh()
+      
+      
+   def refreshClicked(self):
+      self.replaceCheck.setChecked(False)
+      for i in self.parent.settings['imported']:
+         if os.path.exists(i):
+            self.doImport(i)
       
       
    def removeEmptyFolders(self, items):

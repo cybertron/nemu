@@ -6,17 +6,20 @@ class MenuItem:
       self.name = ''
       self.command = ''
       self.icon = ''
+      self.working = ''
       self.parent = None
       self.folder = False
       self.deleted = False
       
       
    def findIcon(self):
-      if os.path.exists(self.icon) or (self.icon == '' and not self.folder):
+      if os.path.exists(self.icon):# or (self.icon == '' and not self.folder):
          return
          
       if self.folder:
          self.icon = 'folder'
+      if self.icon == '':
+         self.icon = 'applications-other.png'
          
       print 'Searching for', self.name, 'icon'
       for basePath in ['/usr/share/icons', '/usr/local/share/icons', '/usr/share/pixmaps', os.path.expanduser('~/.local/share/icons')]:

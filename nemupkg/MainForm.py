@@ -74,6 +74,7 @@ class MainForm(QDialog):
       self.settings['width'] = 400
       self.settings['height'] = 400
       self.settings['quit'] = False
+      self.settings['imported'] = []
       
       
    def loadConfig(self, filename, default):
@@ -211,6 +212,7 @@ class MainForm(QDialog):
          item = MenuItem()
          item.name = form.name
          item.command = form.command
+         item.working = form.working
          item.folder = form.folder
          item.icon = form.icon
          item.findIcon()
@@ -239,6 +241,7 @@ class MainForm(QDialog):
       
       form.name = item.name
       form.command = item.command
+      form.working = item.working
       form.folder = item.folder
       form.icon = item.icon
       form.populateFields()
@@ -251,6 +254,7 @@ class MainForm(QDialog):
       if form.accepted:
          item.name = form.name
          item.command = form.command
+         item.working = form.working
          item.folder = form.folder
          item.icon = form.icon
          item.findIcon()
@@ -354,9 +358,13 @@ class MainForm(QDialog):
          command = sender.item.command
          for i in flags:
             command = command.replace('%' + i, '')
+         working = sender.item.working
+         if not os.path.isdir(working):
+            working = None
+            
          # Need to redirect stdout and stderr so if the process writes something it won't fail
          with open(os.path.devnull, 'w') as devnull:
-            Popen(command + '&', stdout=devnull, stderr=devnull, shell=True)
+            Popen(command + '&', stdout=devnull, stderr=devnull, shell=True, cwd=working)
          self.hideOrClose()
          
          
@@ -403,15 +411,19 @@ class MainForm(QDialog):
       socket.waitForConnected(1000)
       
       if socket.state() == QLocalSocket.ConnectedState:
+         print 'Server found'
          sys.exit()
       else:
          print 'No server running'
       
       
    def handleConnection(self):
+      import datetime
+      print "Got connection", datetime.datetime.now()
       self.setCurrentItem(None)
       self.refresh(False)
       self.show()
+      print "Showed", datetime.datetime.now()
       return
       
       
