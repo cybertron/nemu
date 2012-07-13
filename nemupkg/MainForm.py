@@ -105,6 +105,7 @@ class MainForm(QDialog):
       self.setMargins(self.buttonLayout)
       self.buttonListLayout.addLayout(self.buttonLayout, 0)
       
+      # Top buttons and labels
       self.settingsButton = QPushButton()
       self.settingsButton.setIcon(QIcon(iconPath))
       self.settingsButton.setMinimumHeight(35)
@@ -124,6 +125,18 @@ class MainForm(QDialog):
       self.sizeGrip.setMinimumSize(QSize(25, 25))
       self.buttonLayout.addWidget(self.sizeGrip, 0, Qt.AlignRight | Qt.AlignTop)
       
+      # Filter box
+      self.filterLayout = QHBoxLayout()
+      self.filterLabel = QLabel("Filter")
+      self.filterLayout.addWidget(self.filterLabel)
+      
+      self.filterBox = QLineEdit()
+      self.filterBox.textChanged.connect(self.refresh)
+      self.filterLayout.addWidget(self.filterBox)
+      
+      self.buttonListLayout.addLayout(self.filterLayout)
+      
+      # Menu item display
       self.listSplitter = QSplitter()
       self.buttonListLayout.addWidget(self.listSplitter, 1)
       
@@ -312,17 +325,19 @@ class MainForm(QDialog):
       self.allItems = []
       sortedLeft = []
       sortedRight = []
+      self.updateFilter()
+      
       if self.currentItem != None:
          currParent = self.currentItem.parent
          for i in self.menuItems:
-            if i.parent == currParent and not i.deleted:
+            if i.parent == currParent and not i.deleted and i.matchedFilter:
                sortedLeft.append(i)
       else:
          for i in self.favorites:
             sortedLeft.append(i)
       
       for i in self.menuItems:
-         if i.parent == self.currentItem and not i.deleted:
+         if i.parent == self.currentItem and not i.deleted and i.matchedFilter:
             sortedRight.append(i)
             
       sortedLeft.sort(key = lambda x: x.name)
@@ -346,6 +361,12 @@ class MainForm(QDialog):
       newItem.clicked.connect(self.itemClicked)
       self.allItems.append(newItem)
       return newItem
+      
+   def updateFilter(self):
+      filterValue = str(self.filterBox.text())
+      
+      for i in self.menuItems:
+         i.checkFilter(filterValue)
             
       
    def itemClicked(self):
@@ -406,12 +427,17 @@ class MainForm(QDialog):
       
       
    def connectToRunning(self):
-      socket = QLocalSocket()
-      socket.connectToServer('nemuSocket')
-      socket.waitForConnected(1000)
+      self.socket = QLocalSocket()
+      self.socket.connectToServer('nemuSocket')
+      self.socket.waitForConnected(1000)
       
-      if socket.state() == QLocalSocket.ConnectedState:
+      if self.socket.state() == QLocalSocket.ConnectedState:
          print 'Server found'
+         if self.socket.waitForReadyRead(3000):
+            line = self.socket.readLine()
+            print line
+         else:
+            print self.socket.errorString()
          sys.exit()
       else:
          print 'No server running'
@@ -420,7 +446,13 @@ class MainForm(QDialog):
    def handleConnection(self):
       import datetime
       print "Got connection", datetime.datetime.now()
+      
+      connection = self.server.nextPendingConnection()
+      connection.write('connected')
+      del connection
+      
       self.setCurrentItem(None)
+      self.filterBox.setText('')
       self.refresh(False)
       self.show()
       print "Showed", datetime.datetime.now()
@@ -431,5 +463,6 @@ class MainForm(QDialog):
    def keepalive(self):
       if self.isHidden():
          self.refresh(False)
+
          
          

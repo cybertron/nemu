@@ -10,6 +10,7 @@ class MenuItem:
       self.parent = None
       self.folder = False
       self.deleted = False
+      self.matchedFilter = True
       
       
    def findIcon(self):
@@ -57,3 +58,18 @@ class MenuItem:
          return self.name
       else:
          return self.command
+         
+         
+   def checkFilter(self, value):
+      lowerName = self.name.lower()
+      lowerCommand = self.command.lower()
+      lowerValue = value.lower()
+      self.matchedFilter = (value == '')
+      
+      if not self.folder and not self.deleted:
+         if lowerValue in lowerName or lowerValue in lowerCommand:
+            self.matchedFilter = True
+            current = self.parent
+            while current != None:
+               current.matchedFilter = True
+               current = current.parent
