@@ -103,15 +103,29 @@ class MainForm(QDialog):
       
       self.buttonLayout = QHBoxLayout()
       self.setMargins(self.buttonLayout)
-      self.buttonListLayout.addLayout(self.buttonLayout, 0)
       
-      # Top buttons and labels
+      # Settings and Filter box
+      self.filterLayout = QHBoxLayout()
       self.settingsButton = QPushButton()
       self.settingsButton.setIcon(QIcon(iconPath))
       self.settingsButton.setMinimumHeight(35)
       self.settingsButton.clicked.connect(self.settingsClicked)
-      self.buttonLayout.addWidget(self.settingsButton, 0)
+      self.filterLayout.addWidget(self.settingsButton, 0)
       
+      self.filterLabel = QLabel("Filter")
+      self.filterLayout.addWidget(self.filterLabel)
+      
+      self.filterBox = QLineEdit()
+      self.filterBox.textChanged.connect(self.refresh)
+      self.filterLayout.addWidget(self.filterBox)
+      
+      self.sizeGrip = QSizeGrip(self)
+      self.sizeGrip.setMinimumSize(QSize(25, 25))
+      self.filterLayout.addWidget(self.sizeGrip, 0, Qt.AlignRight | Qt.AlignTop)
+      
+      self.buttonListLayout.addLayout(self.filterLayout)
+      
+      # Top buttons and labels
       self.backButton = QPushButton('Favorites')
       self.backButton.setMinimumHeight(35)
       self.backButton.clicked.connect(self.backClicked)
@@ -121,20 +135,7 @@ class MainForm(QDialog):
       self.currentLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
       self.buttonLayout.addWidget(self.currentLabel, 1)
       
-      self.sizeGrip = QSizeGrip(self)
-      self.sizeGrip.setMinimumSize(QSize(25, 25))
-      self.buttonLayout.addWidget(self.sizeGrip, 0, Qt.AlignRight | Qt.AlignTop)
-      
-      # Filter box
-      self.filterLayout = QHBoxLayout()
-      self.filterLabel = QLabel("Filter")
-      self.filterLayout.addWidget(self.filterLabel)
-      
-      self.filterBox = QLineEdit()
-      self.filterBox.textChanged.connect(self.refresh)
-      self.filterLayout.addWidget(self.filterBox)
-      
-      self.buttonListLayout.addLayout(self.filterLayout)
+      self.buttonListLayout.addLayout(self.buttonLayout, 0)
       
       # Menu item display
       self.listSplitter = QSplitter()
