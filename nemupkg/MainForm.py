@@ -51,6 +51,10 @@ class MainForm(QDialog):
       # We need to do this because these items won't show up in the UI, but may interfere with
       # merges if they duplicate something that is being merged in.
       self.menuItems[:] = [i for i in self.menuItems if i.parent == None or i.parent in self.menuItems]
+
+      for i in self.menuItems:
+         if not hasattr(i, 'imported'):
+            i.imported = False
       
       self.setupUI()
       
@@ -271,6 +275,7 @@ class MainForm(QDialog):
          item.working = form.working
          item.folder = form.folder
          item.icon = form.icon
+         item.imported = False
          item.findIcon()
          self.refresh()
          
@@ -295,6 +300,7 @@ class MainForm(QDialog):
       
       if item in self.menuItems:
          item.deleted = True
+         item.imported = False
       if item in self.favorites:
          self.favorites.remove(item)
       

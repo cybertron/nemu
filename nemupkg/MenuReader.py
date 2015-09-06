@@ -29,7 +29,7 @@ class MenuReader:
 
       try:
          self.doc = parse(xdgMenu)
-      except:
+      except Exception:
          print 'Failed to parse menu:', xdgMenu
          return
       
@@ -126,6 +126,7 @@ class MenuReader:
                newItem.command = value.command
                newItem.working = value.working
                newItem.icon = value.icon
+               newItem.imported = True
                self.menuItems.append(newItem)
                
    # The menu file likely has a single root menu - we throw that out since

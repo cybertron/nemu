@@ -186,6 +186,10 @@ class SettingsForm(QDialog):
       
    def refreshClicked(self):
       self.replaceCheck.setChecked(False)
+      # Remove all imported items - they'll be reimported anyway and this helps avoid dupes
+      # Don't remove folders or we may orphan custom items
+      self.parent.menuItems = [i for i in self.parent.menuItems
+                               if not i.imported or i.folder]
       for i in self.parent.settings['imported']:
          if os.path.exists(i):
             self.doImport(i)
@@ -224,6 +228,7 @@ class SettingsForm(QDialog):
             items.append(i)
          else:
             parentMap[i] = dup
+            dup.imported = True
             
             
    def checkDup(self, i, j):

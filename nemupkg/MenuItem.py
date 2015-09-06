@@ -11,6 +11,7 @@ class MenuItem:
       self.folder = False
       self.deleted = False
       self.matchedFilter = True
+      self.imported = False
       
       
    def findIcon(self):
