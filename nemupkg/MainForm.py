@@ -382,10 +382,12 @@ class MainForm(QDialog):
          self.setCurrentItem(sender.item)
          self.refresh(False)
       else:
-         flags = ['f', 'F', 'u', 'U', 'd', 'D', 'n', 'N', 'i', 'c', 'k', 'v', 'm']
+         flags = ['f', 'F', 'u', 'U', 'd', 'D', 'n', 'N', 'i', 'k', 'v', 'm']
          command = sender.item.command
          for i in flags:
             command = command.replace('%' + i, '')
+         # %c needs a proper value in some cases
+         command = command.replace('%c', '"%s"' % sender.item.name)
          working = sender.item.working
          if not os.path.isdir(working):
             working = None
