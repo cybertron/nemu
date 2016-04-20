@@ -51,6 +51,15 @@ class MainForm(QDialog):
       # We need to do this because these items won't show up in the UI, but may interfere with
       # merges if they duplicate something that is being merged in.
       self.menuItems[:] = [i for i in self.menuItems if i.parent == None or i.parent in self.menuItems]
+      # Look for broken icon paths
+      needSave = False
+      for i in self.menuItems + self.favorites:
+          if not os.path.exists(i.icon):
+              i.findIcon()
+              needSave = True
+      if needSave:
+         self.saveMenu()
+
 
       for i in self.menuItems:
          if not hasattr(i, 'imported'):
@@ -357,12 +366,15 @@ class MainForm(QDialog):
          self.rightList.add(self.createItem(i))
          
       if save:
-         # Save the current menu status
-         with open(self.menuFile, 'wb') as f:
-            cPickle.dump(self.menuItems, f)
-         with open(self.favoritesFile, 'wb') as f:
-            cPickle.dump(self.favorites, f)
-         
+         self.saveMenu()
+
+   def saveMenu(self):
+      # Save the current menu status
+      with open(self.menuFile, 'wb') as f:
+         cPickle.dump(self.menuItems, f)
+      with open(self.favoritesFile, 'wb') as f:
+         cPickle.dump(self.favorites, f)
+
    def createItem(self, item):
       newItem = ListItem(item, self.clearMouseOver)
       newItem.clicked.connect(self.itemClicked)
@@ -472,6 +484,3 @@ class MainForm(QDialog):
    def keepalive(self):
       if self.isHidden():
          self.refresh(False)
-
-         
-         

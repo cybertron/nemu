@@ -25,14 +25,18 @@ class MenuItem:
          
       print 'Searching for', self.name, 'icon'
       for basePath in ['/usr/share/icons', '/usr/local/share/icons', '/usr/share/pixmaps', os.path.expanduser('~/.local/share/icons')]:
-         iconPath = self.lookForIcon(self.icon, basePath)
+         iconBase = os.path.basename(self.icon)
+         iconPath = self.lookForIcon(iconBase, basePath)
          if iconPath != '':
+            print 'Found!'
             break
       self.icon = iconPath
             
    def lookForIcon(self, icon, path, recurse = False):
       if os.path.isdir(path):
          listdir = os.listdir(path)
+         # TODO: This should be smarter.  It will prioritize 64x64 over 128x128.
+         #       Although maybe that's okay.  Our icons aren't larger than that anyway.
          listdir.sort(reverse = True) # Make sure we get higher res icons first
          for i in listdir:
             currPath = os.path.join(path, i)
