@@ -88,6 +88,7 @@ class MainForm(QDialog):
       self.settings['height'] = 400
       self.settings['quit'] = False
       self.settings['imported'] = []
+      self.settings['iconTheme'] = None
       
       
    def loadConfig(self, filename, default):
@@ -432,6 +433,9 @@ class MainForm(QDialog):
    def settingsClicked(self):
       form = SettingsForm(self)
       form.quitCheck.setChecked(self.settings['quit'])
+      theme = self.settings.get('iconTheme')
+      if theme:
+         form.themeCombo.setCurrentIndex(form.themeCombo.findText(theme))
       
       self.holdOpen = True
       form.exec_()

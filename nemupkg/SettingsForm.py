@@ -147,6 +147,7 @@ class SettingsForm(QDialog):
       
       
    def doImport(self, filename):
+      self.parent.settings['iconTheme'] = self.themeCombo.currentText()
       directory = os.path.join(os.path.dirname(filename), 'applications-merged')
       applicationsMerged = []
       if os.path.isdir(directory):
@@ -245,4 +246,3 @@ class SettingsForm(QDialog):
       
    def quit(self):
       sys.exit()
-      
