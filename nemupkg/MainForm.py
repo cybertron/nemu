@@ -95,7 +95,8 @@ class MainForm(QDialog):
    def loadConfig(self, filename, default):
       if os.path.exists(filename):
          with open(filename, 'rb') as f:
-            return cPickle.load(f)
+            data = f.read().replace('PyQt4', 'PyQt5')
+            return cPickle.loads(data)
       else:
          return default
       
