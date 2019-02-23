@@ -1,4 +1,5 @@
-from PyQt4.QtGui import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import QDialog
 import os
 
 class AddForm(QDialog):

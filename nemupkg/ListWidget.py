@@ -1,5 +1,6 @@
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import QScrollArea, QWidget, QVBoxLayout, QLayout, QSizePolicy
 
 class ListWidget(QScrollArea):
    def __init__(self, clearMouseOver, parent = None):

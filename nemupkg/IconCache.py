@@ -1,6 +1,6 @@
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
-from PyQt4.QtSvg import *
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtSvg import *
 
 # This class stores icon data in a QByteArray so it can be serialized by pickle
 class IconCache():
