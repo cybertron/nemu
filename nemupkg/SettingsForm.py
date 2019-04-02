@@ -1,6 +1,8 @@
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import QDialog
+from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QTabWidget, QWidget, QLineEdit,
+                             QPushButton, QHBoxLayout, QLabel, QComboBox, QCheckBox,
+                             QProgressBar, QSizePolicy, QTextEdit, QFileDialog, qApp
+                             )
+from PyQt5.QtCore import Qt
 import os, sys
 from MenuReader import *
 from MenuItem import *
@@ -109,12 +111,12 @@ class SettingsForm(QDialog):
       
       
    def importSelectClicked(self):
-      filename = QFileDialog.getOpenFileName(directory = '/etc/xdg/menus')
+      filename, _ = QFileDialog.getOpenFileName(directory = '/etc/xdg/menus')
       if filename != '':
          self.importFileText.setText(filename)
          
    def importUserClicked(self):
-      filename = QFileDialog.getOpenFileName(directory = os.path.expanduser('~/.config/menus'))
+      filename, _ = QFileDialog.getOpenFileName(directory = os.path.expanduser('~/.config/menus'))
       if filename != '':
          self.importFileText.setText(filename)
          

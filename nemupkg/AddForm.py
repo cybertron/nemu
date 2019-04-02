@@ -1,5 +1,5 @@
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import QDialog
+from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QLineEdit, QPushButton, QCheckBox,
+                             QHBoxLayout, QLabel, QFileDialog)
 import os
 
 class AddForm(QDialog):
@@ -67,7 +67,7 @@ class AddForm(QDialog):
       
       
    def commandBrowseClicked(self):
-      filename = QFileDialog.getOpenFileName()
+      filename, _ = QFileDialog.getOpenFileName()
       self.commandBox.setText(filename)
       
       
@@ -75,7 +75,7 @@ class AddForm(QDialog):
       startDir = '/usr/share/icons'
       if self.iconBox.text() != '':
          startDir = os.path.dirname(str(self.iconBox.text()))
-      filename = QFileDialog.getOpenFileName(directory = startDir)
+      filename, _ = QFileDialog.getOpenFileName(directory = startDir)
       if filename != '':
          self.iconBox.setText(filename)
 

@@ -1,7 +1,7 @@
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
+from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtSvg import QSvgRenderer
 from PyQt5.QtWidgets import QPushButton, QSizePolicy
+from PyQt5.QtGui import QFont
 import os
 from IconCache import *
 

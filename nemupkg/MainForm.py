@@ -1,13 +1,14 @@
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
-from PyQt5.QtNetwork import *
-from PyQt5.QtWidgets import *
+from PyQt5.QtCore import Qt, QTimer, QSize
+from PyQt5.QtNetwork import QLocalServer, QLocalSocket
+from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
+                             QLineEdit, QSizeGrip, QSplitter,QAction, QMessageBox)
+from PyQt5.QtGui import QIcon, QCursor
 import cPickle
 import os
 import copy
 import sys
 import time
-from subprocess import *
+from subprocess import Popen
 from MenuReader import *
 from AddForm import *
 from MenuItem import *
