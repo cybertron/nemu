@@ -31,6 +31,7 @@ class MainForm(QDialog):
       self.currentItem = None
       self.menuFile = os.path.expanduser('~/.nemu/menu')
       self.favoritesFile = os.path.expanduser('~/.nemu/favorites')
+      # NOTE: If you change this, also update migrate-settings
       self.settingsFile = os.path.expanduser('~/.nemu/settings')
       self.initSettings()
 
@@ -45,10 +46,13 @@ class MainForm(QDialog):
       self.menuItems = self.loadConfig(self.menuFile, self.menuItems)
       self.favorites = self.loadConfig(self.favoritesFile, self.favorites)
       # Don't load directly into self.settings so we can add new default values as needed
-      tempSettings = self.loadConfig(self.settingsFile, self.settings)
-      for key, value in tempSettings.items():
-         self.settings[key] = value
-      
+      try:
+         tempSettings = self.loadConfig(self.settingsFile, self.settings)
+         for key, value in tempSettings.items():
+            self.settings[key] = value
+      except SystemError:
+         print('ERROR: Failed to load settings. You may need to run migrate-settings.')
+         raise
       # This should never happen, but unfortunately bugs do, so clean up orphaned items.
       # We need to do this because these items won't show up in the UI, but may interfere with
       # merges if they duplicate something that is being merged in.
