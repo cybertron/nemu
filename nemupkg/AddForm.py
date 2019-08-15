@@ -68,7 +68,8 @@ class AddForm(QDialog):
       
    def commandBrowseClicked(self):
       filename, _ = QFileDialog.getOpenFileName()
-      self.commandBox.setText(filename)
+      if filename != '':
+         self.commandBox.setText(filename)
       
       
    def iconSelectClicked(self):
