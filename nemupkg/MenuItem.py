@@ -23,12 +23,12 @@ class MenuItem:
       if self.icon == '':
          self.icon = 'applications-other.png'
          
-      print 'Searching for', self.name, 'icon'
+      print('Searching for', self.name, 'icon')
       for basePath in ['/usr/share/icons', '/usr/local/share/icons', '/usr/share/pixmaps', os.path.expanduser('~/.local/share/icons')]:
          iconBase = os.path.basename(self.icon)
          iconPath = self.lookForIcon(iconBase, basePath)
          if iconPath != '':
-            print 'Found!'
+            print('Found!')
             break
       self.icon = iconPath
             

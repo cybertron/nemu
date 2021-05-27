@@ -4,8 +4,8 @@ from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QTabWidget, QWidget, QLineEdi
                              )
 from PyQt5.QtCore import Qt
 import os, sys
-from MenuReader import *
-from MenuItem import *
+from .MenuReader import *
+from .MenuItem import *
 
 class SettingsForm(QDialog):
    def __init__(self, parent = None):

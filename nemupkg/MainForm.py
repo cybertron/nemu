@@ -3,19 +3,19 @@ from PyQt5.QtNetwork import QLocalServer, QLocalSocket
 from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
                              QLineEdit, QSizeGrip, QSplitter,QAction, QMessageBox)
 from PyQt5.QtGui import QIcon, QCursor
-import cPickle
+import pickle
 import os
 import copy
 import sys
 import time
 from subprocess import Popen
-from MenuReader import *
-from AddForm import *
-from MenuItem import *
-from ListWidget import *
-from ListItem import *
-from SettingsForm import *
-from IconCache import *
+from .MenuReader import *
+from .AddForm import *
+from .MenuItem import *
+from .ListWidget import *
+from .ListItem import *
+from .SettingsForm import *
+from .IconCache import *
 
 class MainForm(QDialog):
    def __init__(self, parent = None):
@@ -100,8 +100,8 @@ class MainForm(QDialog):
    def loadConfig(self, filename, default):
       if os.path.exists(filename):
          with open(filename, 'rb') as f:
-            data = f.read().replace('PyQt4', 'PyQt5')
-            return cPickle.loads(data)
+            data = f.read().replace(b'PyQt4', b'PyQt5')
+            return pickle.loads(data, encoding="bytes")
       else:
          return default
       
@@ -227,7 +227,7 @@ class MainForm(QDialog):
       self.settings['width'] = self.width()
       self.settings['height'] = self.height()
       with open(self.settingsFile, 'wb') as f:
-         cPickle.dump(self.settings, f)
+         pickle.dump(self.settings, f)
          
    def place(self):
       desktop = qApp.desktop()
@@ -379,9 +379,9 @@ class MainForm(QDialog):
    def saveMenu(self):
       # Save the current menu status
       with open(self.menuFile, 'wb') as f:
-         cPickle.dump(self.menuItems, f)
+         pickle.dump(self.menuItems, f)
       with open(self.favoritesFile, 'wb') as f:
-         cPickle.dump(self.favorites, f)
+         pickle.dump(self.favorites, f)
 
    def createItem(self, item):
       newItem = ListItem(item, self.clearMouseOver)
@@ -464,30 +464,30 @@ class MainForm(QDialog):
       self.socket.waitForConnected(1000)
       
       if self.socket.state() == QLocalSocket.ConnectedState:
-         print 'Server found'
+         print('Server found')
          if self.socket.waitForReadyRead(3000):
             line = self.socket.readLine()
-            print line
+            print(line)
          else:
-            print self.socket.errorString()
+            print(self.socket.errorString())
          sys.exit()
       else:
-         print 'No server running'
+         print('No server running')
       
       
    def handleConnection(self):
       import datetime
-      print "Got connection", datetime.datetime.now()
+      print("Got connection", datetime.datetime.now())
       
       connection = self.server.nextPendingConnection()
-      connection.write('connected')
+      connection.write(b'connected')
       del connection
       
       self.setCurrentItem(None)
       self.filterBox.setText('')
       self.refresh(False)
       self.show()
-      print "Showed", datetime.datetime.now()
+      print("Showed", datetime.datetime.now())
       return
       
       

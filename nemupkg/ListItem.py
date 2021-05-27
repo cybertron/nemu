@@ -3,7 +3,7 @@ from PyQt5.QtSvg import QSvgRenderer
 from PyQt5.QtWidgets import QPushButton, QSizePolicy
 from PyQt5.QtGui import QFont
 import os
-from IconCache import *
+from .IconCache import *
 
 
 class ListItem(QPushButton):

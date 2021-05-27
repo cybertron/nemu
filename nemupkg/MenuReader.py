@@ -1,6 +1,6 @@
 import os
 from xml.dom.minidom import parse
-from MenuItem import *
+from .MenuItem import *
 
 class MenuReader:
    def __init__(self, xdgMenu = None):
@@ -24,13 +24,13 @@ class MenuReader:
          xdgMenu = self.findFile(self.xdgConfigDirs, menuPath)
          
       if xdgMenu == None or not os.path.exists(xdgMenu):
-         print 'Failed to find menu file'
+         print('Failed to find menu file')
          return
 
       try:
          self.doc = parse(xdgMenu)
       except Exception:
-         print 'Failed to parse menu:', xdgMenu
+         print('Failed to parse menu:', xdgMenu)
          return
       
       self.loadMenu(self.doc.documentElement)
@@ -221,7 +221,7 @@ class Menu():
                return False
          return True
       else:
-         print 'Got unrecognized logic type', key
+         print('Got unrecognized logic type', key)
          return False
       
    def checkFile(self, name, filename, categories):
