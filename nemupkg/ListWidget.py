@@ -1,5 +1,5 @@
-from PyQt5.QtWidgets import QScrollArea, QWidget, QVBoxLayout, QLayout, QSizePolicy
-from PyQt5.QtCore import Qt
+from PyQt6.QtWidgets import QScrollArea, QWidget, QVBoxLayout, QLayout, QSizePolicy
+from PyQt6.QtCore import Qt
 
 class ListWidget(QScrollArea):
    def __init__(self, clearMouseOver, parent = None):
@@ -18,7 +18,7 @@ class ListWidget(QScrollArea):
       self.layout = QVBoxLayout(self.widget)
       self.layout.setSpacing(0)
       self.layout.setContentsMargins(0, 0, 0, 0)
-      self.layout.setSizeConstraint(QLayout.SetMinimumSize)
+      self.layout.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
 
       
    def add(self, item):

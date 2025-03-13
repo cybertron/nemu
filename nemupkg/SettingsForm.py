@@ -1,8 +1,9 @@
-from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QTabWidget, QWidget, QLineEdit,
+from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QTabWidget, QWidget, QLineEdit,
                              QPushButton, QHBoxLayout, QLabel, QComboBox, QCheckBox,
-                             QProgressBar, QSizePolicy, QTextEdit, QFileDialog, qApp
+                             QProgressBar, QSizePolicy, QTextEdit, QFileDialog,
+                             QApplication
                              )
-from PyQt5.QtCore import Qt
+from PyQt6.QtCore import Qt
 import os, sys
 from .MenuReader import *
 from .MenuItem import *
@@ -162,7 +163,7 @@ class SettingsForm(QDialog):
       workingItems = []
       for f in files:
          self.importStatus.setText('Importing ' + f)
-         qApp.processEvents()
+         QApplication.processEvents()
          reader = MenuReader(f)
          newItems = reader.menuItems
          self.removeEmptyFolders(newItems)

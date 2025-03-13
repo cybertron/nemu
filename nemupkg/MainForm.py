@@ -1,8 +1,8 @@
-from PyQt5.QtCore import Qt, QTimer, QSize
-from PyQt5.QtNetwork import QLocalServer, QLocalSocket
-from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
-                             QLineEdit, QSizeGrip, QSplitter,QAction, QMessageBox)
-from PyQt5.QtGui import QIcon, QCursor
+from PyQt6.QtCore import Qt, QTimer, QSize
+from PyQt6.QtNetwork import QLocalServer, QLocalSocket
+from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
+                             QLineEdit, QSizeGrip, QSplitter, QMessageBox)
+from PyQt6.QtGui import QIcon, QCursor, QAction
 import pickle
 import os
 import copy
@@ -73,7 +73,7 @@ class MainForm(QDialog):
       
       self.setupUI()
       
-      self.setContextMenuPolicy(Qt.ActionsContextMenu)
+      self.setContextMenuPolicy(Qt.ContextMenuPolicy.ActionsContextMenu)
       self.createMenu(self)
       
       self.refresh(False)
@@ -100,15 +100,15 @@ class MainForm(QDialog):
    def loadConfig(self, filename, default):
       if os.path.exists(filename):
          with open(filename, 'rb') as f:
-            data = f.read().replace(b'PyQt4', b'PyQt5')
-            return pickle.loads(data, encoding="bytes")
+            data = f.read()
+            return pickle.loads(data, encoding='bytes')
       else:
          return default
       
       
    def setupUI(self):
       self.resize(self.settings['width'], self.settings['height'])
-      self.setWindowFlags(Qt.FramelessWindowHint | Qt.CustomizeWindowHint | Qt.WindowStaysOnTopHint)
+      self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.CustomizeWindowHint | Qt.WindowType.WindowStaysOnTopHint)
       #self.setWindowFlags(Qt.X11BypassWindowManagerHint)
       self.setWindowTitle('Nemu')
       self.setMouseTracking(True)
@@ -142,7 +142,7 @@ class MainForm(QDialog):
       
       self.sizeGrip = QSizeGrip(self)
       self.sizeGrip.setMinimumSize(QSize(25, 25))
-      self.filterLayout.addWidget(self.sizeGrip, 0, Qt.AlignRight | Qt.AlignTop)
+      self.filterLayout.addWidget(self.sizeGrip, 0, Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
       
       self.buttonListLayout.addLayout(self.filterLayout)
       
@@ -153,7 +153,7 @@ class MainForm(QDialog):
       self.buttonLayout.addWidget(self.backButton, 1)
       
       self.currentLabel = QLabel()
-      self.currentLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+      self.currentLabel.setAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter)
       self.buttonLayout.addWidget(self.currentLabel, 1)
       
       self.buttonListLayout.addLayout(self.buttonLayout, 0)
@@ -223,15 +223,16 @@ class MainForm(QDialog):
          
 
    def saveSettings(self):
-      self.settings['splitterState'] = self.listSplitter.saveState()
+      #self.settings['splitterState'] = self.listSplitter.saveState()
+      self.settings.pop('splitterState', None)
       self.settings['width'] = self.width()
       self.settings['height'] = self.height()
       with open(self.settingsFile, 'wb') as f:
          pickle.dump(self.settings, f)
          
    def place(self):
-      desktop = qApp.desktop()
-      screenSize = desktop.availableGeometry(QCursor.pos())
+      screen = QApplication.primaryScreen()
+      screenSize = screen.availableGeometry()
       self.move(screenSize.x(), screenSize.y() + screenSize.height() - self.height())
          
          
@@ -463,7 +464,7 @@ class MainForm(QDialog):
       self.socket.connectToServer('nemuSocket')
       self.socket.waitForConnected(1000)
       
-      if self.socket.state() == QLocalSocket.ConnectedState:
+      if self.socket.state() == QLocalSocket.LocalSocketState.ConnectedState:
          print('Server found')
          if self.socket.waitForReadyRead(3000):
             line = self.socket.readLine()

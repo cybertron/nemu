@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QLineEdit, QPushButton, QCheckBox,
+from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QLineEdit, QPushButton, QCheckBox,
                              QHBoxLayout, QLabel, QFileDialog)
 import os
 
