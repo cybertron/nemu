@@ -30,7 +30,7 @@ class ListWidget(QScrollArea):
       
    
    def mousePressEvent(self, event):
-      if event.button() == Qt.RightButton:
+      if event.button() == Qt.MouseButton.RightButton:
          self.clearMouseOver()
          self.mouseOver = True
       QScrollArea.mousePressEvent(self, event)

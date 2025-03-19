@@ -25,7 +25,7 @@ class ListItem(QPushButton):
       
       
    def mousePressEvent(self, event):
-      if event.button() == Qt.RightButton:
+      if event.button() == Qt.MouseButton.RightButton:
          self.clearMouseOver()
          self.mouseOver = True
       QPushButton.mousePressEvent(self, event)

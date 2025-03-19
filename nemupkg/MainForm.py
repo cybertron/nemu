@@ -240,7 +240,7 @@ class MainForm(QDialog):
       form = AddForm()
       
       self.holdOpen = True
-      form.exec_()
+      form.exec()
       self.checkMouse()
       self.holdOpen = False
       
@@ -283,7 +283,7 @@ class MainForm(QDialog):
       form.populateFields()
       
       self.holdOpen = True
-      form.exec_()
+      form.exec()
       self.checkMouse()
       self.holdOpen = False
       
@@ -446,7 +446,7 @@ class MainForm(QDialog):
          form.themeCombo.setCurrentIndex(form.themeCombo.findText(theme))
       
       self.holdOpen = True
-      form.exec_()
+      form.exec()
       self.checkMouse()
       self.holdOpen = False
       

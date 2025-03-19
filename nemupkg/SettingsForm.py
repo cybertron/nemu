@@ -56,7 +56,7 @@ class SettingsForm(QDialog):
       importPageLayout.addWidget(self.importProgress)
       
       self.importStatus = QLabel()
-      self.importStatus.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Fixed)
+      self.importStatus.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Fixed)
       importPageLayout.addWidget(self.importStatus)
       
       quitPage = QWidget()
@@ -71,7 +71,7 @@ class SettingsForm(QDialog):
       aboutPage = QWidget()
       aboutPageLayout = QVBoxLayout(aboutPage)
       aboutText = QTextEdit()
-      aboutText.setAlignment(Qt.AlignCenter)
+      aboutText.setAlignment(Qt.AlignmentFlag.AlignCenter)
       aboutText.append('Nemu\n')
       aboutText.append('Copyright 2012 Ben Nemec\n')
       aboutText.append("Distributed under the GPLv3\n")
