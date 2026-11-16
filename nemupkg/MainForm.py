@@ -210,9 +210,11 @@ class MainForm(QDialog):
          self.releaseMouse()
       
    def leaveEvent(self, event):
-      # If we set holdOpen, it means that we've opened a dialog, so we shouldn't grab
-      if not self.hasMouse():
-         self.grabMouse()
+      self.hideOrClose()
+      # Grabbing doesn't work on Wayland, so we just have to close :-(
+      #if not self.hasMouse():
+      #   print('grab')
+      #   self.grabMouse()
       
    def mousePressEvent(self, event):
       if not self.hasMouse():
@@ -221,7 +223,6 @@ class MainForm(QDialog):
    def hasMouse(self):
       return self.geometry().contains(QCursor.pos())
          
-
    def saveSettings(self):
       #self.settings['splitterState'] = self.listSplitter.saveState()
       self.settings.pop('splitterState', None)
@@ -231,11 +232,14 @@ class MainForm(QDialog):
          pickle.dump(self.settings, f)
          
    def place(self):
+      # Wayland sucks so this doesn't work there
+      # To place the window, it is necessary to use whatever mechanism (if any) is provided
+      # by your WM to set the default coordinates
+      # Yes, this is stupid. Blame Wayland, not me.
       screen = QApplication.primaryScreen()
       screenSize = screen.availableGeometry()
       self.move(screenSize.x(), screenSize.y() + screenSize.height() - self.height())
-         
-         
+
    def newClicked(self):
       form = AddForm()
       
